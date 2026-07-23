@@ -1,0 +1,324 @@
+"""Command-line interface for grem."""
+
+from contextlib import contextmanager
+from importlib import resources
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Annotated, Iterator
+
+import semver
+import typer
+import yaml
+
+from grem.scaffold import (
+    ScaffoldError,
+    load_manifest,
+    scaffold as materialize,
+    scaffold_template,
+)
+from grem.upgrade import overlay_reference, require_clean_git_worktree
+
+
+app = typer.Typer(
+    help="Stamp a project from a deterministic template.",
+    no_args_is_help=True,
+)
+
+
+@app.callback()
+def main() -> None:
+    """Stamp projects from declarative templates."""
+
+
+@contextmanager
+def _template_directory(reference: str) -> Iterator[Path]:
+    candidate = Path(reference).expanduser()
+    if candidate.is_dir():
+        yield candidate
+        return
+
+    bundled = resources.files("grem.templates").joinpath(reference)
+    if not bundled.is_dir():
+        raise ScaffoldError(f"unknown template: {reference}")
+    with resources.as_file(bundled) as bundled_path:
+        yield bundled_path
+
+
+def _layout(project: Path) -> dict:
+    layout_path = project / ".grem" / "config.yaml"
+    if not layout_path.is_file():
+        raise ScaffoldError(f"no .grem/config.yaml in {project}")
+    try:
+        layout = yaml.safe_load(layout_path.read_text())
+    except yaml.YAMLError as error:
+        raise ScaffoldError(f"invalid .grem/config.yaml in {project}") from error
+    if not isinstance(layout, dict):
+        raise ScaffoldError(f".grem/config.yaml must be a mapping in {project}")
+    return layout
+
+
+def _project_scope(project: Path, scope: Path) -> Path:
+    project_root = project.resolve()
+    candidate = scope.expanduser()
+    if not candidate.is_absolute():
+        candidate = project_root / candidate
+    resolved = candidate.resolve()
+    try:
+        relative = resolved.relative_to(project_root)
+    except ValueError as error:
+        raise ScaffoldError(f"scope is outside the project: {scope}") from error
+    if not resolved.exists():
+        raise ScaffoldError(f"scope does not exist: {scope}")
+    return relative
+
+
+def _scope_prompt(
+    project: Path,
+    left: Path,
+    right: Path,
+    prompt_name: str,
+) -> tuple[Path, Path, str]:
+    _layout(project)
+    left_scope = _project_scope(project, left)
+    right_scope = _project_scope(project, right)
+    prompt = project / ".grem" / "harness" / prompt_name
+    if not prompt.is_file():
+        raise ScaffoldError(f"no {prompt_name} prompt in {project}")
+    return left_scope, right_scope, prompt.read_text()
+
+
+@app.command()
+def scaffold(
+    template: Annotated[str, typer.Argument(help="Template name or directory.")],
+    target: Annotated[Path, typer.Argument(help="Empty output directory.")],
+) -> None:
+    """Scaffold TARGET from TEMPLATE."""
+
+    try:
+        with _template_directory(template) as template_path:
+            entries = scaffold_template(template_path, target)
+    except ScaffoldError as error:
+        typer.echo(f"error: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    typer.echo(f"Scaffolded {len(entries)} entries into {target}")
+
+
+@app.command()
+def diff(
+    left: Annotated[Path, typer.Argument(help="First project scope.")],
+    right: Annotated[Path, typer.Argument(help="Second project scope.")],
+    project: Annotated[
+        Path,
+        typer.Option("--project", "-p", help="Scaffolded project directory."),
+    ] = Path("."),
+) -> None:
+    """Print a prompt for finding semantic inconsistencies between two scopes."""
+
+    try:
+        left_scope, right_scope, prompt = _scope_prompt(
+            project,
+            left,
+            right,
+            "diff.md",
+        )
+    except ScaffoldError as error:
+        typer.echo(f"error: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    typer.echo(
+        "\n".join(
+            (
+                "# Semantic project diff",
+                "",
+                f"Scope A: `{left_scope.as_posix()}`",
+                f"Scope B: `{right_scope.as_posix()}`",
+                "",
+                prompt,
+            )
+        ),
+        nl=False,
+    )
+
+
+@app.command()
+def sync(
+    left: Annotated[Path, typer.Argument(help="First project scope.")],
+    right: Annotated[Path, typer.Argument(help="Second project scope.")],
+    project: Annotated[
+        Path,
+        typer.Option("--project", "-p", help="Scaffolded project directory."),
+    ] = Path("."),
+) -> None:
+    """Print the full agent loop for reconciling two project scopes."""
+
+    try:
+        left_scope, right_scope, prompt = _scope_prompt(
+            project,
+            left,
+            right,
+            "sync.md",
+        )
+    except ScaffoldError as error:
+        typer.echo(f"error: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    typer.echo(
+        "\n".join(
+            (
+                "# Synchronize project scopes",
+                "",
+                f"Scope A: `{left_scope.as_posix()}`",
+                f"Scope B: `{right_scope.as_posix()}`",
+                "",
+                prompt,
+            )
+        ),
+        nl=False,
+    )
+
+
+@app.command()
+def instructions(
+    project: Annotated[
+        Path,
+        typer.Argument(help="Scaffolded project directory."),
+    ] = Path("."),
+) -> None:
+    """Print the prompt for aligning configured agent instruction files."""
+
+    prompt = project / ".grem" / "harness" / "instructions.md"
+    try:
+        layout = _layout(project)
+        configuration = layout.get("agent_instructions")
+        if not isinstance(configuration, dict):
+            raise ScaffoldError(
+                ".grem/config.yaml has no agent_instructions mapping"
+            )
+        central = configuration.get("central")
+        targets = configuration.get("targets")
+        if not isinstance(central, str) or not central:
+            raise ScaffoldError("agent_instructions.central must be a path")
+        if (
+            not isinstance(targets, list)
+            or not targets
+            or not all(isinstance(target, str) and target for target in targets)
+        ):
+            raise ScaffoldError(
+                "agent_instructions.targets must be a non-empty path list"
+            )
+        if not (project / central).is_file():
+            raise ScaffoldError(f"central agent instructions do not exist: {central}")
+        if not prompt.is_file():
+            raise ScaffoldError(f"no agent instructions prompt in {project}")
+    except ScaffoldError as error:
+        typer.echo(f"error: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    target_lines = "\n".join(f"- `{target}`" for target in targets)
+    typer.echo(
+        "\n".join(
+            (
+                "# Align agent instruction files",
+                "",
+                f"Central instructions: `{central}`",
+                "Targets:",
+                target_lines,
+                "",
+                prompt.read_text(),
+            )
+        ),
+        nl=False,
+    )
+
+
+@app.command()
+def upgrade(
+    project: Annotated[
+        Path,
+        typer.Argument(help="Scaffolded project directory."),
+    ] = Path("."),
+    template: Annotated[
+        str | None,
+        typer.Option("--template", help="Target template name or directory."),
+    ] = None,
+    interactive: Annotated[
+        bool,
+        typer.Option("--interactive", help="Confirm before overwriting template files."),
+    ] = False,
+) -> None:
+    """Overlay a newer template in a clean Git worktree and print a merge prompt."""
+
+    try:
+        layout = _layout(project)
+        template_name = layout.get("template")
+        current_text = layout.get("template_version")
+        if not isinstance(template_name, str) or not template_name:
+            raise ScaffoldError(".grem/config.yaml has no template name")
+        if not isinstance(current_text, str):
+            raise ScaffoldError(".grem/config.yaml has no template_version")
+        try:
+            current = semver.Version.parse(current_text)
+        except ValueError as error:
+            raise ScaffoldError(
+                ".grem/config.yaml template_version is not valid SemVer 2: "
+                f"{current_text!r}"
+            ) from error
+
+        target_reference = template or template_name
+        with _template_directory(target_reference) as template_path:
+            available = load_manifest(template_path)
+            if available.name != template_name:
+                raise ScaffoldError(
+                    f"project template {template_name!r} does not match "
+                    f"target template {available.name!r}"
+                )
+            prompt_path = available.content / ".grem" / "harness" / "upgrade.md"
+            if not prompt_path.is_file():
+                raise ScaffoldError(
+                    f"target template has no upgrade prompt: {prompt_path}"
+                )
+            prompt_body = prompt_path.read_text()
+
+            if available.version < current:
+                raise ScaffoldError(
+                    f"target {available.version} is older than project {current}"
+                )
+            if available.version == current:
+                typer.echo(f"{template_name} is already at {current}")
+                return
+
+            if interactive and not typer.confirm(
+                "Overwrite generated files with the target template?",
+                default=True,
+            ):
+                typer.echo("Upgrade cancelled")
+                return
+
+            git_root = require_clean_git_worktree(project)
+            with TemporaryDirectory(prefix="grem-upgrade-") as temporary:
+                reference = Path(temporary) / "reference"
+                materialize(available.root, available.content, reference)
+                result = overlay_reference(reference, project)
+    except ScaffoldError as error:
+        typer.echo(f"error: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    typer.echo(
+        "\n".join(
+            (
+                "# Grem template upgrade",
+                "",
+                f"Project template: `{template_name}`",
+                f"Current version: `{current}`",
+                f"Target version: `{available.version}`",
+                f"Target template: `{target_reference}`",
+                f"Git worktree: `{git_root}`",
+                f"Files overwritten: {result.files_written}",
+                f"Directories created: {result.directories_created}",
+                "",
+                prompt_body,
+            )
+        ),
+        nl=False,
+    )

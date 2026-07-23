@@ -1,0 +1,28 @@
+# grem CLI
+
+The grem CLI stamps deterministic project structure and emits agent-facing
+prompts. It does not run an LLM or perform prompted lifecycle changes itself.
+
+## Commands
+
+- `grem scaffold TEMPLATE TARGET` creates the declared folders and copies the
+  declared template files into an absent or empty target.
+- `grem instructions [PROJECT]` reads [[grem-config]] and prints the prompt for
+  aligning configured agent instruction files.
+- `grem diff A B` validates two project-local scopes and prints the semantic
+  comparison prompt for a numbered list of inconsistencies.
+- `grem sync A B` validates the same kinds of scopes and prints the full plan →
+  implement → test → document → diff loop.
+- `grem upgrade [PROJECT]` requires a clean Git worktree, overlays a newer
+  template, and prints the target template's prompt for reviewing and merging
+  the resulting unstaged diff. `--interactive` confirms before writing.
+
+`scaffold` and `upgrade` write project files. `diff`, `sync`, and `instructions`
+only produce text for a user to copy into an LLM agent such as Claude or Codex.
+
+## Layers
+
+The CLI layer loads and validates declarations, config, and SemVer values.
+Template content owns generated project knowledge and agent behavior.
+
+See [[grem-config]].

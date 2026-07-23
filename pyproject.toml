@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grem"
+version = "0.1.0"
+description = "A deterministic scaffolding CLI."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "pyyaml>=6.0",
+    "semver>=3.0,<4",
+    "typer>=0.15",
+]
+
+[project.scripts]
+grem = "grem.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+grem = [
+    "templates/*/content/*",
+    "templates/*/content/**/*",
+    "templates/*/content/.grem/*",
+    "templates/*/content/.grem/**/*",
+]
+
+[tool.setuptools.exclude-package-data]
+"*" = [
+    "*.pyc",
+    "*.pyo",
+    "__pycache__/*",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

@@ -1,0 +1,35 @@
+# `.grem/config.yaml`
+
+`.grem/config.yaml` is the stamped project's grem control record. It is
+separate from the modular project knowledge under `doc/`.
+
+Agents ignore `.grem/**` during ordinary work. The control record and harness
+become active only when the user explicitly requests a grem workflow or
+supplies a grem prompt for execution.
+
+## Shape
+
+```yaml
+kind: layout
+schema: 1
+template: python
+template_version: 0.6.0
+generated:
+  directories: []
+  files: []
+agent_instructions:
+  central: .grem/harness/README.md
+  targets:
+    - AGENTS.md
+    - CLAUDE.md
+```
+
+`template` and `template_version` identify the stamped template.
+`generated` records the paths supplied by that template.
+`agent_instructions` selects the central instruction source and the
+tool-specific files that an LLM agent should keep aligned.
+
+The config contains no timestamps or machine-specific paths. Template
+`bootstrap.py` metadata and the template copy of `.grem/config.yaml` must agree.
+
+The [[grem-cli]] reads this file for `instructions`, `sync`, and `upgrade`.
