@@ -5,24 +5,46 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
 
 ## Commands
 
-- `grem scaffold TEMPLATE TARGET` creates the declared folders and copies the
-  declared template files into an absent or empty target.
-- `grem instructions [PROJECT]` reads [[grem-config]] and prints the prompt for
-  aligning configured agent instruction files.
+- `grem init [TARGET]` scaffolds the declared folders and renders the declared
+  template files into the target. Like `git init` it defaults to the bundled
+  `python` template (override with `--template`/`-t`) and to the current
+  directory, and names the project after the target folder — prompting when
+  interactive, or take `--name`/`-n`. The name drives the template
+  [[grem-config|variables]] (package name, proposal prefix) that are substituted
+  during scaffolding and recorded in the config. It writes alongside unrelated
+  files but refuses to overwrite existing ones, and refuses to run when the
+  target already holds a `.grem` folder.
+- `grem agent [PROJECT]` reads [[grem-config]] and prints the prompt for
+  aligning configured agent instruction files. `grem instructions` remains as a
+  hidden alias.
+- `grem new --type TYPE --style STYLE PATH` validates a source file inside the
+  project and prints the documentation-style prompt stored under
+  `.grem/styles/<type>/<style>/prompt.md`, parameterized with that source path.
 - `grem diff A B` validates two project-local scopes and prints the semantic
   comparison prompt for a numbered list of inconsistencies.
 - `grem sync A B` validates the same kinds of scopes and prints the full plan →
   implement → test → document → diff loop.
-- `grem upgrade [PROJECT]` requires a clean Git worktree, overlays a newer
-  template, and prints the target template's prompt for reviewing and merging
-  the resulting unstaged diff. `--interactive` confirms before writing.
+- `grem upgrade [PROJECT]` requires a clean Git worktree, re-renders the newer
+  template with the project's recorded variables, overlays only the
+  template-owned control layer — every path matched by the project's
+  [[templates|`.gremignore`]] is left untouched — and prints the target
+  template's prompt for reviewing and merging the resulting unstaged diff.
+  `--interactive` confirms before writing.
 
-`scaffold` and `upgrade` write project files. `diff`, `sync`, and `instructions`
+`init` and `upgrade` write project files. `diff`, `sync`, `agent`, and `new`
 only produce text for a user to copy into an LLM agent such as Claude or Codex.
+Every prompt command prints to stdout (pipe it, e.g. `grem agent | pbcopy`) and
+accepts `--copy`/`-c` to place the prompt on the clipboard directly. A top-level
+`--version`/`-v` prints the CLI version and exits.
+
+Documentation styles are portable prompts under `.grem/styles/<type>/<style>/`,
+each describing how to replicate one documentation style on any project. `new`
+renders one against a chosen source file; the agent performs the actual work.
 
 ## Layers
 
-The CLI layer loads and validates declarations, config, and SemVer values.
-Template content owns generated project knowledge and agent behavior.
+The CLI layer loads and validates [[templates|template declarations]], config,
+and SemVer values. Template content owns generated project knowledge and agent
+behavior.
 
-See [[grem-config]].
+See [[grem-config]] and [[templates]].

@@ -1,0 +1,33 @@
+# 10 — The whole loop: one circulation (summary recap)
+# Retells section 10 of ../grem-lifecycle.md
+
+direction: down
+
+classes: {
+  tmpl:  { style: { fill: "#eef2ff"; stroke: "#4f46e5"; stroke-width: 2; font-color: "#312e81"; border-radius: 8 } }
+  proj:  { style: { fill: "#ecfdf5"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b"; border-radius: 8 } }
+  actor: { style: { fill: "#fef3c7"; stroke: "#d97706"; stroke-width: 2; font-color: "#92400e"; border-radius: 8 } }
+}
+
+title: "Change circulates — down, across, sideways, and up" {
+  near: top-center
+  shape: text
+  style: { font-size: 24; bold: true; font-color: "#111827" }
+}
+
+template: "TEMPLATE\naccumulated knowledge\n& agent behavior" { class: tmpl }
+project: "PROJECT · calc\ndeclarations ⇄ code" { class: proj }
+actor: "grem CLI + Agent + Alice\nstamp · reason · decide" { class: actor }
+other: "another project" { class: proj }
+
+template -> project: "DOWN · init / upgrade" { style: { stroke: "#4f46e5"; stroke-width: 3 } }
+project -> project: "ACROSS · diff / sync\n(scope ⇄ scope)" { style: { stroke: "#475569"; stroke-dash: 4 } }
+project -> other: "SIDEWAYS · new\n(portable styles)" { style: { stroke: "#d97706"; stroke-width: 2 } }
+project -> template: "UP · issues → new version" { style: { stroke: "#059669"; stroke-width: 3; stroke-dash: 4 } }
+actor -> project: "does the semantic work" { style.stroke: "#d97706" }
+
+note: "The CLI stamps structure; agents and Alice do the thinking; the template holds what's learned. A grem project grows MORE coherent over time." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

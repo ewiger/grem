@@ -2,12 +2,18 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import semver
 from typer.testing import CliRunner
 
+from grem import __version__
 from grem.cli import app
+from grem.templates.python.bootstrap import VERSION as TEMPLATE_VERSION
 
 
 runner = CliRunner()
+
+CURRENT_VERSION = TEMPLATE_VERSION
+NEXT_VERSION = str(semver.Version.parse(TEMPLATE_VERSION).bump_minor())
 
 
 def commit_project(project: Path) -> None:
@@ -34,34 +40,71 @@ def newer_template(tmp_path: Path) -> Path:
     bundled = (
         Path(__file__).parents[1] / "src" / "grem" / "templates" / "python"
     )
-    target_template = tmp_path / "python-0.7.0"
+    target_template = tmp_path / f"python-{NEXT_VERSION}"
     shutil.copytree(bundled, target_template)
     bootstrap = target_template / "bootstrap.py"
     bootstrap.write_text(
-        bootstrap.read_text().replace('VERSION = "0.6.0"', 'VERSION = "0.7.0"')
+        bootstrap.read_text().replace(
+            f'VERSION = "{CURRENT_VERSION}"',
+            f'VERSION = "{NEXT_VERSION}"',
+        )
     )
     layout = target_template / "content" / ".grem" / "config.yaml"
     layout.write_text(
         layout.read_text().replace(
-            "template_version: 0.6.0",
-            "template_version: 0.7.0",
+            f"template_version: {CURRENT_VERSION}",
+            f"template_version: {NEXT_VERSION}",
         )
     )
+    # Change a template-owned file (must be refreshed) and a project-owned file
+    # (must be protected) so the upgrade can be checked from both sides.
+    sync = target_template / "content" / ".grem" / "harness" / "sync.md"
+    sync.write_text(sync.read_text() + "\nUPGRADED-TEMPLATE-MARKER\n")
     readme = target_template / "content" / "README.md"
-    readme.write_text("# myproject\n\nUpgraded template.\n")
+    readme.write_text("# {{ project_name }}\n\nUpgraded template.\n")
     return target_template
+
+
+def test_version_flag_reports_cli_version() -> None:
+    for flag in ("--version", "-v"):
+        result = runner.invoke(app, [flag])
+        assert result.exit_code == 0
+        assert result.stdout.strip() == f"grem {__version__}"
+
+
+def test_cli_version_matches_pyproject() -> None:
+    import tomllib
+
+    pyproject = Path(__file__).parents[1] / "pyproject.toml"
+    data = tomllib.loads(pyproject.read_text())
+    assert __version__ == data["project"]["version"]
+
+
+def test_scaffold_stamps_grem_cli_version(tmp_path: Path) -> None:
+    target = tmp_path / "myproject"
+
+    result = runner.invoke(app, ["init", str(target)])
+
+    assert result.exit_code == 0
+    config = (target / ".grem" / "config.yaml").read_text()
+    assert f"grem_version: {__version__}" in config
+    assert (
+        f"template_version: {CURRENT_VERSION}\ngrem_version: {__version__}\n"
+        in config
+    )
 
 
 def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
 
-    result = runner.invoke(app, ["scaffold", "python", str(target)])
+    result = runner.invoke(app, ["init", str(target)])
 
     assert result.exit_code == 0
-    assert "Scaffolded 25 entries" in result.stdout
+    assert "Scaffolded 48 entries" in result.stdout
     assert (target / "src" / "myproject").is_dir()
     assert (target / "doc" / "models" / "behavior").is_dir()
     assert (target / "doc" / "proposals" / "README.md").is_file()
+    assert (target / ".claude" / "skills" / "grem" / "SKILL.md").is_file()
     assert (target / "AGENTS.md").is_file()
     assert "Ignore `.grem/**` during ordinary work" in (
         target / "AGENTS.md"
@@ -71,9 +114,36 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     assert (target / "pyproject.toml").is_file()
 
 
+def test_init_name_option_substitutes_variables(tmp_path: Path) -> None:
+    target = tmp_path / "checkout"
+
+    result = runner.invoke(app, ["init", str(target), "--name", "Demo App"])
+
+    assert result.exit_code == 0
+    assert "as 'Demo App'" in result.stdout
+    assert (target / "src" / "demo_app").is_dir()
+    assert (target / "README.md").read_text() == "# Demo App\n"
+    assert 'name = "demo_app"' in (target / "pyproject.toml").read_text()
+    assert "DEMOAPP-0001" in (target / "doc" / "proposals" / "README.md").read_text()
+    config = (target / ".grem" / "config.yaml").read_text()
+    assert "project_name: Demo App" in config
+    assert "package_name: demo_app" in config
+    assert "proposal_prefix: DEMOAPP" in config
+
+
+def test_init_defaults_name_to_target_folder(tmp_path: Path) -> None:
+    target = tmp_path / "coolthing"
+
+    result = runner.invoke(app, ["init", str(target)])
+
+    assert result.exit_code == 0
+    assert (target / "src" / "coolthing").is_dir()
+    assert (target / "README.md").read_text() == "# coolthing\n"
+
+
 def test_sync_command_prints_project_prompt(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(target)])
+    scaffold_result = runner.invoke(app, ["init", str(target)])
     assert scaffold_result.exit_code == 0
 
     result = runner.invoke(
@@ -89,7 +159,7 @@ def test_sync_command_prints_project_prompt(tmp_path: Path) -> None:
 
 def test_diff_command_prints_numbered_inconsistency_prompt(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(target)])
+    scaffold_result = runner.invoke(app, ["init", str(target)])
     assert scaffold_result.exit_code == 0
 
     result = runner.invoke(
@@ -104,12 +174,12 @@ def test_diff_command_prints_numbered_inconsistency_prompt(tmp_path: Path) -> No
     assert "Do not plan or change files" in result.stdout
 
 
-def test_instructions_command_uses_configured_paths(tmp_path: Path) -> None:
+def test_agent_command_uses_configured_paths(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(target)])
+    scaffold_result = runner.invoke(app, ["init", str(target)])
     assert scaffold_result.exit_code == 0
 
-    result = runner.invoke(app, ["instructions", str(target)])
+    result = runner.invoke(app, ["agent", str(target)])
 
     assert result.exit_code == 0
     assert "Central instructions: `.grem/harness/README.md`" in result.stdout
@@ -119,9 +189,252 @@ def test_instructions_command_uses_configured_paths(tmp_path: Path) -> None:
     assert "ignore `.grem/**`" in result.stdout
 
 
+def test_instructions_alias_matches_agent(tmp_path: Path) -> None:
+    target = tmp_path / "myproject"
+    assert runner.invoke(app, ["init", str(target)]).exit_code == 0
+
+    agent_result = runner.invoke(app, ["agent", str(target)])
+    alias_result = runner.invoke(app, ["instructions", str(target)])
+
+    assert alias_result.exit_code == 0
+    assert alias_result.stdout == agent_result.stdout
+
+
+def test_copy_flag_places_prompt_on_clipboard(tmp_path: Path, monkeypatch) -> None:
+    import pyperclip
+
+    clipboard: dict[str, str] = {}
+    monkeypatch.setattr(pyperclip, "copy", lambda text: clipboard.update(text=text))
+
+    target = tmp_path / "myproject"
+    assert runner.invoke(app, ["init", str(target)]).exit_code == 0
+
+    result = runner.invoke(app, ["agent", str(target), "--copy"])
+
+    assert result.exit_code == 0
+    assert "Central instructions:" in clipboard["text"]
+    # The prompt still reaches stdout so piping keeps working.
+    assert "Central instructions:" in result.stdout
+
+
+def test_new_command_prints_style_prompt(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["init", str(project)])
+    assert scaffold_result.exit_code == 0
+
+    style = project / ".grem" / "styles" / "doc" / "slides"
+    style.mkdir(parents=True, exist_ok=True)
+    (style / "prompt.md").write_text("MARKER-STYLE-BODY\n")
+    source = project / "doc" / "wiki" / "example.md"
+    source.write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/slides`" in result.stdout
+    assert "Source document: `doc/wiki/example.md`" in result.stdout
+    assert "MARKER-STYLE-BODY" in result.stdout
+
+
+def test_new_command_reports_missing_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["init", str(project)])
+    assert scaffold_result.exit_code == 0
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "nonexistent",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "no doc/nonexistent style" in result.stderr
+
+
+def test_new_command_rejects_source_outside_project(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["init", str(project)])
+    assert scaffold_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "../outside.md",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "outside the project" in result.stderr
+
+
+def test_scaffolded_project_ships_slides_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["init", str(project)])
+    assert scaffold_result.exit_code == 0
+    assert (
+        project / ".grem" / "styles" / "doc" / "slides" / "prompt.md"
+    ).is_file()
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/slides`" in result.stdout
+    assert "numbered D2" in result.stdout
+
+
+def test_scaffolded_project_ships_adr_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["init", str(project)])
+    assert scaffold_result.exit_code == 0
+    assert (
+        project / ".grem" / "styles" / "doc" / "adr" / "prompt.md"
+    ).is_file()
+    assert (project / "doc" / "proposals" / "TEMPLATE.md").is_file()
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "adr",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/adr`" in result.stdout
+    assert "ADR-style technical decision record" in result.stdout
+
+
+def test_scaffolded_project_ships_lenses_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["init", str(project)])
+    assert scaffold_result.exit_code == 0
+    assert (
+        project / ".grem" / "styles" / "doc" / "lenses" / "prompt.md"
+    ).is_file()
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "lenses",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/lenses`" in result.stdout
+    assert "L0/L1 model lens" in result.stdout
+
+
+def test_scaffolded_project_ships_hmd_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["init", str(project)])
+    assert scaffold_result.exit_code == 0
+    assert (
+        project / ".grem" / "styles" / "doc" / "hmd" / "prompt.md"
+    ).is_file()
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "hmd",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/hmd`" in result.stdout
+    assert "hyper-markdown" in result.stdout
+
+
+def test_new_command_prints_shipped_slides_style() -> None:
+    repo_root = Path(__file__).parents[1]
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/grem-cli.hmd",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(repo_root),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/slides`" in result.stdout
+    assert "Source document: `doc/wiki/grem-cli.hmd`" in result.stdout
+    assert "numbered D2" in result.stdout
+    assert "One idea per diagram" in result.stdout
+
+
 def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
     commit_project(project)
 
@@ -133,16 +446,24 @@ def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> No
     )
 
     assert result.exit_code == 0
-    assert "Current version: `0.6.0`" in result.stdout
-    assert "Target version: `0.7.0`" in result.stdout
+    assert f"Current version: `{CURRENT_VERSION}`" in result.stdout
+    assert f"Target version: `{NEXT_VERSION}`" in result.stdout
     assert "Files overwritten:" in result.stdout
+    assert "Files skipped (project-owned):" in result.stdout
     assert "resulting unstaged Git diff" in result.stdout
-    assert project.joinpath("README.md").read_text() == (
-        "# myproject\n\nUpgraded template.\n"
-    )
-    assert "template_version: 0.7.0" in (
-        project / ".grem" / "config.yaml"
+    # Project-owned files are protected: README/pyproject keep their init values,
+    # not the newer template's content.
+    assert project.joinpath("README.md").read_text() == "# myproject\n"
+    assert 'name = "myproject"' in project.joinpath("pyproject.toml").read_text()
+    # Template-owned files are refreshed.
+    assert "UPGRADED-TEMPLATE-MARKER" in (
+        project / ".grem" / "harness" / "sync.md"
     ).read_text()
+    upgraded_config = (project / ".grem" / "config.yaml").read_text()
+    assert f"template_version: {NEXT_VERSION}" in upgraded_config
+    assert f"grem_version: {__version__}" in upgraded_config
+    # The resolved variables survive the upgrade so re-rendering stays stable.
+    assert "project_name: myproject" in upgraded_config
     status = subprocess.run(
         ["git", "status", "--short"],
         cwd=project,
@@ -150,13 +471,14 @@ def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> No
         capture_output=True,
         text=True,
     ).stdout
-    assert "README.md" in status
+    assert ".grem/harness/sync.md" in status
     assert ".grem/config.yaml" in status
+    assert "README.md" not in status
 
 
 def test_interactive_upgrade_can_cancel_before_overlay(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    runner.invoke(app, ["scaffold", "python", str(project)])
+    runner.invoke(app, ["init", str(project)])
     commit_project(project)
 
     target_template = newer_template(tmp_path)
@@ -175,7 +497,7 @@ def test_interactive_upgrade_can_cancel_before_overlay(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "Upgrade cancelled" in result.stdout
-    assert "template_version: 0.6.0" in (
+    assert f"template_version: {CURRENT_VERSION}" in (
         project / ".grem" / "config.yaml"
     ).read_text()
     status = subprocess.run(
@@ -190,7 +512,7 @@ def test_interactive_upgrade_can_cancel_before_overlay(tmp_path: Path) -> None:
 
 def test_upgrade_rejects_dirty_git_worktree(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    runner.invoke(app, ["scaffold", "python", str(project)])
+    runner.invoke(app, ["init", str(project)])
     commit_project(project)
     (project / "README.md").write_text("uncommitted work\n")
     target_template = newer_template(tmp_path)
@@ -203,6 +525,6 @@ def test_upgrade_rejects_dirty_git_worktree(tmp_path: Path) -> None:
     assert result.exit_code == 1
     assert "Git worktree must be clean" in result.stderr
     assert (project / "README.md").read_text() == "uncommitted work\n"
-    assert "template_version: 0.6.0" in (
+    assert f"template_version: {CURRENT_VERSION}" in (
         project / ".grem" / "config.yaml"
     ).read_text()

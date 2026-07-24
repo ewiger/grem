@@ -2,10 +2,7 @@
 
 **Grem stamps structure. Agents do the work.**
 
-grem is a deterministic project bootstrap and control CLI for AI-assisted
-development. It stamps a versioned project layout, keeps agent workflows under
-`.grem/`, and turns those workflows into prompts for agents such as Claude and
-Codex.
+grem (short for "gremlin") is a deterministic project bootstrap and control CLI for AI-assisted development. It stamps a versioned project layout, keeps agent workflows under `.grem/`, and turns those workflows into prompts for agents such as Claude and Codex.
 
 The tool handles predictable mechanics. Templates define the knowledge model
 and agent behavior. The generated project's agents perform the semantic work.
@@ -35,13 +32,22 @@ From this checkout:
 
 ```console
 uv sync
-uv run grem scaffold python ./myproject
+uv run grem init ./myproject
 ```
+
+Like `git init`, `grem init` defaults to the bundled `python` template and, with
+no argument, initializes the current directory. It refuses to run when the
+target already holds a `.grem` folder. Pass `--template/-t` to pick another
+template.
 
 The bundled Python template produces:
 
 ```text
 myproject/
+  .claude/
+    skills/
+      grem/
+        SKILL.md
   .grem/
     config.yaml
     harness/
@@ -50,10 +56,21 @@ myproject/
       instructions.md
       sync.md
       upgrade.md
+    styles/
+      doc/
+        adr/
+          prompt.md
+        hmd/
+          prompt.md
+        lenses/
+          prompt.md
+        slides/
+          prompt.md
   src/myproject/
   tests/
   doc/
     models/
+      requirements/
       data/
       domain/
       behavior/
@@ -62,29 +79,55 @@ myproject/
     memory/
     proposals/
       README.md
+      TEMPLATE.md
   AGENTS.md
   CLAUDE.md
   pyproject.toml
   README.md
 ```
 
-The target must be absent or empty. grem rejects unsafe paths, duplicate output
-paths, missing template sources, and non-empty targets.
+grem writes into the target even when it already holds unrelated files, but it
+refuses to overwrite existing files and refuses to re-initialize a directory
+that already holds a `.grem` folder. It also rejects unsafe paths, duplicate
+output paths, and missing template sources.
 
 ## Command model
 
 | Command | CLI action | Agent action |
 | --- | --- | --- |
-| `grem scaffold TEMPLATE TARGET` | Writes the declared project tree | None |
+| `grem init [TARGET]` | Scaffolds the declared project tree (defaults to the `python` template in the current directory) | None |
 | `grem diff A B` | Validates two scopes and prints a semantic-diff prompt | Returns numbered inconsistencies |
 | `grem sync A B` | Validates two scopes and prints the full reconciliation prompt | Plans, implements, tests, documents, and diffs |
-| `grem instructions [PROJECT]` | Reads configured instruction targets and prints a prompt | Aligns `AGENTS.md`, `CLAUDE.md`, and other configured files |
+| `grem agent [PROJECT]` | Reads configured instruction targets and prints a prompt | Aligns `AGENTS.md`, `CLAUDE.md`, and other configured files |
+| `grem new --type TYPE --style STYLE PATH` | Validates a source file and prints a stored documentation-style prompt | Applies the style to the source file |
 | `grem upgrade [PROJECT]` | Overlays a newer template in a clean Git worktree | Reviews the Git diff and helps merge customizations |
 
-`diff`, `sync`, and `instructions` do not modify project files or invoke an
-LLM. Their output is copied into an agent by the user. `upgrade` is the
-controlled exception: it overlays template files first, then prints the merge
-prompt.
+`grem instructions` is kept as a hidden alias of `grem agent`.
+
+`diff`, `sync`, `agent`, and `new` do not modify project files or invoke an LLM.
+Their output is copied into an agent by the user. `upgrade` is the controlled
+exception: it overlays template files first, then prints the merge prompt.
+
+### Getting the prompt into an agent
+
+Every prompt-printing command writes to stdout, so pipe it into your clipboard:
+
+```console
+grem agent | pbcopy                        # macOS
+grem agent | xclip -selection clipboard    # Linux (X11); wl-copy on Wayland
+grem agent | clip                          # Windows
+```
+
+Or use the built-in `--copy`/`-c` flag, which copies the prompt cross-platform
+while still printing it:
+
+```console
+grem agent --copy
+```
+
+When you are working inside Claude Code, the bundled `grem` skill
+(`.claude/skills/grem/`) skips the clipboard entirely: it runs the command and
+carries out the printed prompt directly.
 
 Use `--project` when diffing or syncing another project:
 
@@ -145,13 +188,36 @@ diff → user disposition → plan → implement → test → document → diff
 Neither side is automatically authoritative. The agent uses project evidence,
 `doc/memory/`, and user decisions to reconcile the scopes.
 
+## Documentation styles
+
+A documentation style is a portable prompt that describes how to replicate one
+documentation style on any project — not tied to a specific repo. Styles live
+under `.grem/styles/<type>/<style>/prompt.md`, where `type` groups styles by the
+area they target (for example `doc`).
+
+`grem new` validates a source file inside the project and prints the matching
+style prompt, parameterized with that source path, for an agent to execute:
+
+```console
+uv run grem new doc/wiki/grem-cli.hmd --type doc --style slides
+```
+
+Like `diff`, `sync`, and `agent`, `new` only renders text. The agent does
+the actual work — the bundled `doc/slides` style, for instance, turns a prose doc
+into a numbered folder of D2 "visual story" diagrams.
+
+See [`doc/models/behavior/grem-lifecycle/`](doc/models/behavior/grem-lifecycle/)
+for a worked example: grem's own lifecycle told as a ten-slide D2 deck, generated
+by the `doc/slides` style from [its source
+doc](doc/models/behavior/grem-lifecycle.md).
+
 ## Knowledge model
 
 `doc/` contains categories of truth with different lifetimes:
 
-- `doc/models/` declares the system through data, domain, and behavior lenses.
-  [len](https://github.com/ewiger/len) files such as L0, L1, and L2 live
-  directly here.
+- `doc/models/` declares the system through requirements, data, domain, and
+  behavior lenses. [len](https://github.com/ewiger/len) files such as L0, L1, and
+  L2 live directly here.
 - `doc/wiki/` contains cross-linked hyper-markdown (`.hmd`) cards.
 - `doc/issues/` tracks active work.
 - `doc/memory/` contains small real-time decisions and is loaded for every agent
@@ -159,6 +225,14 @@ Neither side is automatically authoritative. The agent uses project evidence,
 - `doc/proposals/` contains numbered ADR/RFC-style technical specifications.
   Reserve an ID such as `XYZ-0001` in `doc/proposals/README.md`, then create
   `doc/proposals/XYZ-0001/README.md`.
+- `doc/public/` is an *optional, reserved* home for **published** documentation —
+  a rendered API reference or book-format site (for example an `mkdocs` build)
+  generated from the knowledge base above. It is not stamped by default and not
+  every project needs it; grem only reserves the path. Building and publishing
+  stay with the project's own tooling — grem never publishes documentation.
+
+The [knowledge-model](doc/wiki/knowledge-model.hmd) wiki card is the cross-linked
+index of these categories.
 
 `.grem/` is not part of that knowledge base. It is versioned control data and a
 dormant prompt harness.
@@ -184,7 +258,7 @@ also preserve the two context rules:
 Generate the alignment prompt with:
 
 ```console
-uv run grem instructions ./myproject
+uv run grem agent ./myproject
 ```
 
 ## Template upgrades
@@ -227,7 +301,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.6.0"
+VERSION = "0.13.0"
 
 
 class Empty(Moniker):
@@ -258,7 +332,7 @@ machine-specific values.
 Use a local template directory while developing one:
 
 ```console
-uv run grem scaffold ./path/to/template ./myproject
+uv run grem init ./myproject --template ./path/to/template
 ```
 
 ## Boundaries

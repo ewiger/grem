@@ -1,0 +1,41 @@
+# 03 — Init: structure flows DOWN (template → project)
+# Retells section 3 of ../grem-lifecycle.md
+
+direction: down
+
+classes: {
+  tmpl: { style: { fill: "#eef2ff"; stroke: "#4f46e5"; stroke-width: 2; font-color: "#312e81"; border-radius: 8 } }
+  proj: { style: { fill: "#f8fafc"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b" } }
+  home: { style: { fill: "#ecfdf5"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b"; border-radius: 8 } }
+}
+
+title: "grem init ./calc — structure flows DOWN" {
+  near: top-center
+  shape: text
+  style: { font-size: 24; bold: true; font-color: "#111827" }
+}
+
+template: "python template\nversioned · deterministic" { class: tmpl }
+
+project: "./calc" {
+  class: proj
+  src: "src/calc/" { class: home }
+  tests: "tests/" { class: home }
+  models: "doc/models/" { class: home }
+  wiki: "doc/wiki/" { class: home }
+  issues: "doc/issues/" { class: home }
+  memory: "doc/memory/" { class: home }
+  proposals: "doc/proposals/" { class: home }
+  control: ".grem/ harness\n(dormant)" { class: home }
+  agents: "CLAUDE.md · AGENTS.md" { class: home }
+}
+
+template -> project: "grem init — stamps the tree\n(refuses if .grem/ already exists)" {
+  style: { stroke: "#4f46e5"; stroke-width: 4 }
+}
+
+note: "The homes now exist but are empty. Same template + inputs → identical bytes, no timestamps." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

@@ -1,0 +1,63 @@
+# len
+
+[len](https://github.com/ewiger/len) — "a meta programming language" — is the
+experimental notation this project uses to write a [[model-lenses|lens]] down
+formally instead of only in prose. The rhyme is intentional: `len` is the
+notation, a *lens* is the artifact it produces.
+
+*len* is **experimental**. It is not a settled language with a frozen grammar; it
+is a moving target, and this project tracks the parts of it that are stable
+enough to use. In practice that means we work almost entirely at its two lowest
+levels — **natural language plus relational logic** — and treat the higher,
+fully formal end as an aspiration rather than a daily tool.
+
+## Levels of formalism
+
+The central idea of *len* is that one model can be captured at increasing rigor,
+so a lens starts loose and is tightened as it stabilizes. The levels are a
+spectrum, not separate documents:
+
+- **L0 — Natural Spec.** Human intent: goals, worked examples, rationale, edge
+  cases, informal pseudo-code. This is ordinary [[behavior-driven-development]]
+  documentation — natural language, often with diagrams — written in *len*'s
+  vocabulary. The loosest lens.
+- **L1 — Structural Core.** The canonical model expressed in **relational
+  logic**: types, relations, invariants, contracts, laws, and function
+  obligations (`requires` / `ensures`), each with worked examples. Currently
+  *len*'s most stable layer, and the deepest one we usually reach.
+- **L2 — Generation Contract.** How the abstract model maps to concrete output:
+  package layout, naming rules, AST shapes, runtime choices, error strategy,
+  performance targets, pseudo-code. In progress upstream; rarely used here yet.
+
+Because L0 and L1 share one vocabulary, an informal card and a formal `.len`
+file describe the same model in the same terms and can be refined into each
+other. That is why an L0 [[model-lenses|lens]] written as an `.hmd` card is still
+a lens: it is the natural-language end of this same ladder.
+
+## Why we use it: tests and proofs
+
+The reason *len* earns its place here is not formalism for its own sake — it is
+**test generation**. Our focus is turning a lens into checks a machine can run:
+
+- A lens states obligations (`requires` / `ensures`) and laws. Each obligation is
+  a concrete, checkable claim, so writing the lens *is* the specification a test
+  suite verifies. In this project, **lenses are how we do
+  [[test-driven-development]]**: the L1 core is written before, and drives, the
+  code under `src/`.
+- Tightening a lens is deepening a proof. An L0 example is an anecdote; an L1 law
+  is a property; and the intended ceiling is a lens formal enough to carry a
+  [[mathematical-proof]] — formalism deepening from an L0 sketch toward a
+  machine-checkable specification.
+
+So *len* is our way to **generate proofs**, with test cases as the pragmatic,
+runnable first rung of that ladder.
+
+## In grem
+
+grem does not run or check *len*; it only places lenses. The
+[`doc/lenses`](../../../.grem/styles/doc/lenses/prompt.md) documentation style
+turns a source doc into an L0/L1 lens under the right facet of `doc/models/`,
+emphasizing the obligations and laws that become tests.
+
+See [[model-lenses]] for what a lens is and where lenses live, and [[grem-cli]]
+for how grem stamps `doc/models/`.

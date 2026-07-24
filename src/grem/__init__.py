@@ -1,3 +1,8 @@
-"""grem: deterministic project scaffolding."""
+"""grem: deterministic project bootstrap and control for AI-assisted development."""
 
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("grem")
+except PackageNotFoundError:  # running from a source tree without an install
+    __version__ = "0.0.0+unknown"

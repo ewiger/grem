@@ -1,0 +1,39 @@
+# 05 — Diff: drift made visible (scope ↔ scope)
+# Retells section 5 of ../grem-lifecycle.md
+
+direction: down
+
+classes: {
+  cli:   { style: { fill: "#e0f2fe"; stroke: "#0369a1"; stroke-width: 2; font-color: "#0c4a6e"; border-radius: 8 } }
+  agent: { style: { fill: "#fef3c7"; stroke: "#d97706"; stroke-width: 2; font-color: "#92400e"; border-radius: 8 } }
+  decl:  { style: { fill: "#ecfdf5"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b"; border-radius: 8 } }
+  code:  { style: { fill: "#eef2ff"; stroke: "#4f46e5"; stroke-width: 2; font-color: "#312e81"; border-radius: 8 } }
+  data:  { style: { fill: "#f9fafb"; stroke: "#6b7280"; stroke-width: 1; font-color: "#374151" } }
+  user:  { style: { fill: "#f5f3ff"; stroke: "#7c3aed"; stroke-width: 2; font-color: "#5b21b6" } }
+}
+
+title: "grem diff doc/models src — a semantic compare, not a textual one" {
+  near: top-center
+  shape: text
+  style: { font-size: 24; bold: true; font-color: "#111827" }
+}
+
+models: "doc/models/\ndeclared truth" { class: decl }
+src: "src/\nactual truth" { class: code }
+grem: "grem diff\nvalidates scopes,\nprints the prompt" { class: cli }
+agent: "Agent\nreads both sides,\nreports what each means" { class: agent }
+
+findings: "Numbered findings\n1. div(x,0): doc says RAISE, code returns inf\n2. sqrt promised in requirements, absent in src\n3. stale 'RPN input' line nothing references" { class: data; shape: page }
+
+alice: "Alice classifies each:\nbug · feature · accept" { class: user; shape: person }
+
+models <-> src: "compare (semantic)" { style: { stroke: "#475569"; stroke-dash: 4 } }
+grem -> agent: "prints prompt" { style.stroke: "#0369a1" }
+agent -> findings: "produces" { style.stroke: "#d97706" }
+findings -> alice: "grem STOPS here" { style: { stroke: "#475569"; stroke-dash: 4 } }
+
+note: "An evidence-backed, numbered list. Neither scope wins automatically — the user gates every item." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

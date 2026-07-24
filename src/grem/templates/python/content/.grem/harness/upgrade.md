@@ -1,8 +1,9 @@
 # Upgrade this scaffold
 
 grem has verified that the Git worktree was clean, generated the target
-template in a temporary directory, and overlaid its files onto this project.
-The resulting unstaged Git diff is the upgrade record.
+template in a temporary directory, and overlaid its template-owned files onto
+this project. Paths listed in `.gremignore` are project-owned and were left
+untouched. The resulting unstaged Git diff is the upgrade record.
 
 1. Read every file under `doc/memory/`.
 2. Inspect `git status`, `git diff --stat`, and the complete `git diff`.

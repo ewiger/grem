@@ -20,6 +20,10 @@ Use:
 - `upgrade.md` to review and merge a newer template after grem overlays it in a
   clean Git worktree.
 
+Portable documentation styles live under `.grem/styles/<type>/<style>/prompt.md`.
+`grem new` renders one against a chosen source file so an agent can replicate
+that documentation style on any project.
+
 System declarations belong under `doc/models/`. Active work belongs under
 `doc/issues/`. Numbered technical specifications and substantial decisions
 belong under `doc/proposals/`.

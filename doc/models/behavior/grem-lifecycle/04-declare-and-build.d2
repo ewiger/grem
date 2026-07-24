@@ -1,0 +1,40 @@
+# 04 — Declare and build: the project comes alive
+# Retells section 4 of ../grem-lifecycle.md
+
+direction: down
+
+classes: {
+  user: { style: { fill: "#f5f3ff"; stroke: "#7c3aed"; stroke-width: 2; font-color: "#5b21b6" } }
+  decl: { style: { fill: "#ecfdf5"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b"; border-radius: 8 } }
+  code: { style: { fill: "#e0f2fe"; stroke: "#0369a1"; stroke-width: 2; font-color: "#0c4a6e"; border-radius: 8 } }
+  data: { style: { fill: "#f9fafb"; stroke: "#6b7280"; stroke-width: 1; font-color: "#374151" } }
+}
+
+title: "Alice fills two scopes that describe one system" {
+  near: top-center
+  shape: text
+  style: { font-size: 24; bold: true; font-color: "#111827" }
+}
+
+alice: "Alice" { class: user; shape: person }
+
+models: "doc/models/behavior/\nDECLARES: div by 0 raises;\nresults are exact" { class: decl }
+src: "src/calc/ops.py\nDEMONSTRATES: add, sub, mul, div" { class: code }
+memory: "doc/memory/\ndecision: use Decimal, never float" { class: data; shape: page }
+tests: "tests/\npin the behavior Alice cares about" { class: code }
+
+system: "the calculator\n(one system)" { class: data; shape: hexagon }
+
+alice -> models: "types" { style.stroke: "#7c3aed" }
+alice -> src: "types" { style.stroke: "#7c3aed" }
+alice -> memory: "records" { style.stroke: "#7c3aed" }
+alice -> tests: "writes" { style.stroke: "#7c3aed" }
+
+models -> system: "declares intended truth" { style.stroke: "#059669" }
+src -> system: "demonstrates actual truth" { style.stroke: "#0369a1" }
+
+note: "Two scopes now claim the same system. While a human types in both, they drift apart." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

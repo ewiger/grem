@@ -1,0 +1,64 @@
+# Templates
+
+A **template** is what `grem init` and `grem upgrade` stamp from: a directory
+holding a `bootstrap.py` manifest and a `content/` tree. `bootstrap.py` is a
+trusted Python module grem evaluates to discover the project structure; the files
+are copied from `content/`, with template variables substituted (see below). The
+bundled `python` template lives at `src/grem/templates/python/`.
+
+## The manifest
+
+`bootstrap.py` declares three module-level names:
+
+- **`NAME`** — the template's identity, matched against `.grem/config.yaml`.
+- **`VERSION`** — a SemVer 2 string; must equal the `template_version` in
+  `content/.grem/config.yaml` (see [[grem-config]]).
+- **`ROOT`** — the top **`Moniker`** class whose declarations describe the tree.
+
+## Monikers declare the tree
+
+A **`Moniker`** is a class whose annotated methods each declare one output entry.
+Two decorators mark them:
+
+- **`@folder`** — a subfolder; the method's return annotation names the child
+  `Moniker` (an empty `Moniker` is a leaf directory). `@folder("name")` sets the
+  emitted folder name explicitly.
+- **`@file("name")`** — a file copied from the matching path under `content/`
+  (with variables substituted); a `source=` argument overrides the source path.
+  A `@folder("{{ package_name }}")` or `@file` name may itself contain a token,
+  so declarations like `src/{{ package_name }}` resolve to `src/<package_name>`.
+
+Declaration method **bodies are never executed** — grem reads only the
+annotations, so a template cannot run arbitrary code during scaffolding.
+
+## Variables (Mustache interpolation)
+
+Template content and declared names reference **variables** as `{{ name }}`
+tokens. `scaffold` substitutes them using the Mustache *interpolation subset*
+only — no sections, partials, or inheritance — and inserts values raw (HTML
+escaping is off, since templates hold code and config). Unknown tokens are left
+untouched. `grem init` resolves the variables from the project name and records
+them in [[grem-config]]; `grem upgrade` reads them back so refreshed files
+re-render with the same values.
+
+## Ownership: `.gremignore`
+
+A template ships a root **`.gremignore`** listing the paths that are *project-owned*
+— seeded once at `init`, then never re-stamped. `grem upgrade` refreshes only the
+*template-owned* control layer (harness prompts, styles, `.grem/**`) and skips
+every path matched by `.gremignore` (gitignore-style globs, `**`, trailing `/`).
+`.gremignore` is always protected implicitly, so user edits to it survive. In the
+`python` template the source tree, `README.md`, `pyproject.toml`, the proposals
+index, the Kanban board, and `doc/memory/` are project-owned; `CLAUDE.md` and
+`AGENTS.md` are template-owned and refreshed (put custom rules under `doc/memory/`).
+
+## Deterministic materialization
+
+`load_manifest` validates the module (`ROOT` is a `Moniker`; `NAME` and `VERSION`
+are present and agree with the config), then `scaffold` plans and writes the
+tree. Output ordering is canonical — sorted by path, with no timestamps or
+machine-specific values — so the same template and variables always produce the
+same bytes. `scaffold` refuses to overwrite existing files or re-stamp a
+directory that already holds a `.grem` folder.
+
+See [[grem-cli]] and [[grem-config]].
