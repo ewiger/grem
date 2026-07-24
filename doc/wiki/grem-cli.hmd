@@ -11,8 +11,9 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
   directory. It writes alongside unrelated files but refuses to overwrite
   existing ones, and refuses to run when the target already holds a `.grem`
   folder.
-- `grem instructions [PROJECT]` reads [[grem-config]] and prints the prompt for
-  aligning configured agent instruction files.
+- `grem agent [PROJECT]` reads [[grem-config]] and prints the prompt for
+  aligning configured agent instruction files. `grem instructions` remains as a
+  hidden alias.
 - `grem new --type TYPE --style STYLE PATH` validates a source file inside the
   project and prints the documentation-style prompt stored under
   `.grem/styles/<type>/<style>/prompt.md`, parameterized with that source path.
@@ -24,9 +25,10 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
   template, and prints the target template's prompt for reviewing and merging
   the resulting unstaged diff. `--interactive` confirms before writing.
 
-`init` and `upgrade` write project files. `diff`, `sync`, `instructions`,
-and `new` only produce text for a user to copy into an LLM agent such as Claude
-or Codex.
+`init` and `upgrade` write project files. `diff`, `sync`, `agent`, and `new`
+only produce text for a user to copy into an LLM agent such as Claude or Codex.
+Every prompt command prints to stdout (pipe it, e.g. `grem agent | pbcopy`) and
+accepts `--copy`/`-c` to place the prompt on the clipboard directly.
 
 Documentation styles are portable prompts under `.grem/styles/<type>/<style>/`,
 each describing how to replicate one documentation style on any project. `new`

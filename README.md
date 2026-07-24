@@ -94,14 +94,36 @@ output paths, and missing template sources.
 | `grem init [TARGET]` | Scaffolds the declared project tree (defaults to the `python` template in the current directory) | None |
 | `grem diff A B` | Validates two scopes and prints a semantic-diff prompt | Returns numbered inconsistencies |
 | `grem sync A B` | Validates two scopes and prints the full reconciliation prompt | Plans, implements, tests, documents, and diffs |
-| `grem instructions [PROJECT]` | Reads configured instruction targets and prints a prompt | Aligns `AGENTS.md`, `CLAUDE.md`, and other configured files |
+| `grem agent [PROJECT]` | Reads configured instruction targets and prints a prompt | Aligns `AGENTS.md`, `CLAUDE.md`, and other configured files |
 | `grem new --type TYPE --style STYLE PATH` | Validates a source file and prints a stored documentation-style prompt | Applies the style to the source file |
 | `grem upgrade [PROJECT]` | Overlays a newer template in a clean Git worktree | Reviews the Git diff and helps merge customizations |
 
-`diff`, `sync`, `instructions`, and `new` do not modify project files or invoke
-an LLM. Their output is copied into an agent by the user. `upgrade` is the
-controlled exception: it overlays template files first, then prints the merge
-prompt.
+`grem instructions` is kept as a hidden alias of `grem agent`.
+
+`diff`, `sync`, `agent`, and `new` do not modify project files or invoke an LLM.
+Their output is copied into an agent by the user. `upgrade` is the controlled
+exception: it overlays template files first, then prints the merge prompt.
+
+### Getting the prompt into an agent
+
+Every prompt-printing command writes to stdout, so pipe it into your clipboard:
+
+```console
+grem agent | pbcopy                        # macOS
+grem agent | xclip -selection clipboard    # Linux (X11); wl-copy on Wayland
+grem agent | clip                          # Windows
+```
+
+Or use the built-in `--copy`/`-c` flag, which copies the prompt cross-platform
+while still printing it:
+
+```console
+grem agent --copy
+```
+
+When you are working inside Claude Code, the bundled `grem` skill
+(`.claude/skills/grem/`) skips the clipboard entirely: it runs the command and
+carries out the printed prompt directly.
 
 Use `--project` when diffing or syncing another project:
 
@@ -176,7 +198,7 @@ style prompt, parameterized with that source path, for an agent to execute:
 uv run grem new doc/wiki/grem-cli.hmd --type doc --style slides
 ```
 
-Like `diff`, `sync`, and `instructions`, `new` only renders text. The agent does
+Like `diff`, `sync`, and `agent`, `new` only renders text. The agent does
 the actual work — the bundled `doc/slides` style, for instance, turns a prose doc
 into a numbered folder of D2 "visual story" diagrams.
 
@@ -219,7 +241,7 @@ also preserve the two context rules:
 Generate the alignment prompt with:
 
 ```console
-uv run grem instructions ./myproject
+uv run grem agent ./myproject
 ```
 
 ## Template upgrades

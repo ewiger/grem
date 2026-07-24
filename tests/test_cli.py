@@ -142,12 +142,12 @@ def test_diff_command_prints_numbered_inconsistency_prompt(tmp_path: Path) -> No
     assert "Do not plan or change files" in result.stdout
 
 
-def test_instructions_command_uses_configured_paths(tmp_path: Path) -> None:
+def test_agent_command_uses_configured_paths(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
     scaffold_result = runner.invoke(app, ["init", str(target)])
     assert scaffold_result.exit_code == 0
 
-    result = runner.invoke(app, ["instructions", str(target)])
+    result = runner.invoke(app, ["agent", str(target)])
 
     assert result.exit_code == 0
     assert "Central instructions: `.grem/harness/README.md`" in result.stdout
@@ -155,6 +155,34 @@ def test_instructions_command_uses_configured_paths(tmp_path: Path) -> None:
     assert "- `CLAUDE.md`" in result.stdout
     assert "every file under `doc/memory/`" in result.stdout
     assert "ignore `.grem/**`" in result.stdout
+
+
+def test_instructions_alias_matches_agent(tmp_path: Path) -> None:
+    target = tmp_path / "myproject"
+    assert runner.invoke(app, ["init", str(target)]).exit_code == 0
+
+    agent_result = runner.invoke(app, ["agent", str(target)])
+    alias_result = runner.invoke(app, ["instructions", str(target)])
+
+    assert alias_result.exit_code == 0
+    assert alias_result.stdout == agent_result.stdout
+
+
+def test_copy_flag_places_prompt_on_clipboard(tmp_path: Path, monkeypatch) -> None:
+    import pyperclip
+
+    clipboard: dict[str, str] = {}
+    monkeypatch.setattr(pyperclip, "copy", lambda text: clipboard.update(text=text))
+
+    target = tmp_path / "myproject"
+    assert runner.invoke(app, ["init", str(target)]).exit_code == 0
+
+    result = runner.invoke(app, ["agent", str(target), "--copy"])
+
+    assert result.exit_code == 0
+    assert "Central instructions:" in clipboard["text"]
+    # The prompt still reaches stdout so piping keeps working.
+    assert "Central instructions:" in result.stdout
 
 
 def test_new_command_prints_style_prompt(tmp_path: Path) -> None:

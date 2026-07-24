@@ -128,6 +128,35 @@ def _style_prompt(project: Path, type_: str, style: str) -> tuple[str, str, str]
     return kind, name, prompt.read_text()
 
 
+CopyOption = Annotated[
+    bool,
+    typer.Option("--copy", "-c", help="Also copy the printed prompt to the clipboard."),
+]
+
+
+def _emit(text: str, *, copy: bool) -> None:
+    """Print a generated prompt, optionally copying it to the clipboard too.
+
+    The prompt always goes to stdout so it stays pipeable (``grem agent |
+    pbcopy``). With ``--copy`` it is additionally placed on the system
+    clipboard; the confirmation and any failure go to stderr so they never
+    contaminate the piped prompt.
+    """
+
+    typer.echo(text, nl=False)
+    if not copy:
+        return
+
+    import pyperclip
+
+    try:
+        pyperclip.copy(text)
+    except pyperclip.PyperclipException as error:
+        typer.echo(f"warning: could not copy to clipboard: {error}", err=True)
+    else:
+        typer.echo("Copied prompt to clipboard.", err=True)
+
+
 @app.command()
 def init(
     target: Annotated[
@@ -165,6 +194,7 @@ def diff(
         Path,
         typer.Option("--project", "-p", help="Scaffolded project directory."),
     ] = Path("."),
+    copy: CopyOption = False,
 ) -> None:
     """Print a prompt for finding semantic inconsistencies between two scopes."""
 
@@ -179,7 +209,7 @@ def diff(
         typer.echo(f"error: {error}", err=True)
         raise typer.Exit(code=1) from error
 
-    typer.echo(
+    _emit(
         "\n".join(
             (
                 "# Semantic project diff",
@@ -190,7 +220,7 @@ def diff(
                 prompt,
             )
         ),
-        nl=False,
+        copy=copy,
     )
 
 
@@ -202,6 +232,7 @@ def sync(
         Path,
         typer.Option("--project", "-p", help="Scaffolded project directory."),
     ] = Path("."),
+    copy: CopyOption = False,
 ) -> None:
     """Print the full agent loop for reconciling two project scopes."""
 
@@ -216,7 +247,7 @@ def sync(
         typer.echo(f"error: {error}", err=True)
         raise typer.Exit(code=1) from error
 
-    typer.echo(
+    _emit(
         "\n".join(
             (
                 "# Synchronize project scopes",
@@ -227,19 +258,11 @@ def sync(
                 prompt,
             )
         ),
-        nl=False,
+        copy=copy,
     )
 
 
-@app.command()
-def instructions(
-    project: Annotated[
-        Path,
-        typer.Argument(help="Scaffolded project directory."),
-    ] = Path("."),
-) -> None:
-    """Print the prompt for aligning configured agent instruction files."""
-
+def _agent_prompt(project: Path, *, copy: bool) -> None:
     prompt = project / ".grem" / "harness" / "instructions.md"
     try:
         layout = _layout(project)
@@ -269,7 +292,7 @@ def instructions(
         raise typer.Exit(code=1) from error
 
     target_lines = "\n".join(f"- `{target}`" for target in targets)
-    typer.echo(
+    _emit(
         "\n".join(
             (
                 "# Align agent instruction files",
@@ -281,8 +304,34 @@ def instructions(
                 prompt.read_text(),
             )
         ),
-        nl=False,
+        copy=copy,
     )
+
+
+@app.command()
+def agent(
+    project: Annotated[
+        Path,
+        typer.Argument(help="Scaffolded project directory."),
+    ] = Path("."),
+    copy: CopyOption = False,
+) -> None:
+    """Print the prompt for aligning configured agent instruction files."""
+
+    _agent_prompt(project, copy=copy)
+
+
+@app.command(name="instructions", hidden=True)
+def instructions(
+    project: Annotated[
+        Path,
+        typer.Argument(help="Scaffolded project directory."),
+    ] = Path("."),
+    copy: CopyOption = False,
+) -> None:
+    """Deprecated alias for `grem agent`."""
+
+    _agent_prompt(project, copy=copy)
 
 
 @app.command()
@@ -303,6 +352,7 @@ def new(
         Path,
         typer.Option("--project", "-p", help="Scaffolded project directory."),
     ] = Path("."),
+    copy: CopyOption = False,
 ) -> None:
     """Print a documentation-style prompt for applying STYLE to a source file."""
 
@@ -313,7 +363,7 @@ def new(
         typer.echo(f"error: {error}", err=True)
         raise typer.Exit(code=1) from error
 
-    typer.echo(
+    _emit(
         "\n".join(
             (
                 "# Apply a documentation style",
@@ -324,7 +374,7 @@ def new(
                 prompt,
             )
         ),
-        nl=False,
+        copy=copy,
     )
 
 
@@ -342,6 +392,7 @@ def upgrade(
         bool,
         typer.Option("--interactive", help="Confirm before overwriting template files."),
     ] = False,
+    copy: CopyOption = False,
 ) -> None:
     """Overlay a newer template in a clean Git worktree and print a merge prompt."""
 
@@ -401,7 +452,7 @@ def upgrade(
         typer.echo(f"error: {error}", err=True)
         raise typer.Exit(code=1) from error
 
-    typer.echo(
+    _emit(
         "\n".join(
             (
                 "# Grem template upgrade",
@@ -417,5 +468,5 @@ def upgrade(
                 prompt_body,
             )
         ),
-        nl=False,
+        copy=copy,
     )
