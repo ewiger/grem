@@ -71,4 +71,5 @@ turns a source into an L0/L1 lens under a facet, and
 [`doc/hmd`](../../../.grem/styles/doc/hmd/prompt.md) writes the generic wiki-card
 format used across `doc/wiki/`.
 
-See [[grem-cli]] for how grem stamps `doc/models/`.
+See [[knowledge-model]] for how `doc/models/` sits among the other `doc/`
+categories, and [[grem-cli]] for how grem stamps it.

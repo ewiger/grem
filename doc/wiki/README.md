@@ -7,7 +7,9 @@ emerges from small, connected cards rather than one long document.
 
 Start from any card and follow the links. See
 [hyper-markdown.hmd](hyper-markdown.hmd) for the format itself; grouped sets live
-in topic subfolders (for example [models/](models/)).
+in topic subfolders (for example [models/](models/)). The
+[knowledge-model.hmd](knowledge-model.hmd) card indexes how `doc/wiki/` relates
+to the other `doc/` categories.
 
 ## Writing a card
 

@@ -1,0 +1,36 @@
+# 02 — Two layers: deterministic mechanics vs. semantic work
+# Retells section 2 of ../grem-lifecycle.md
+
+direction: down
+
+classes: {
+  tmpl:  { style: { fill: "#eef2ff"; stroke: "#4f46e5"; stroke-width: 2; font-color: "#312e81"; border-radius: 8 } }
+  cli:   { style: { fill: "#e0f2fe"; stroke: "#0369a1"; stroke-width: 2; font-color: "#0c4a6e"; border-radius: 8 } }
+  agent: { style: { fill: "#fef3c7"; stroke: "#d97706"; stroke-width: 2; font-color: "#92400e"; border-radius: 8 } }
+  proj:  { style: { fill: "#ecfdf5"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b"; border-radius: 8 } }
+  data:  { style: { fill: "#f9fafb"; stroke: "#6b7280"; stroke-width: 1; font-color: "#374151" } }
+}
+
+title: "Two layers: deterministic mechanics, then semantic work" {
+  near: top-center
+  shape: text
+  style: { font-size: 24; bold: true; font-color: "#111827" }
+}
+
+template: "Template\nowns knowledge & agent behavior" { class: tmpl }
+grem: "grem CLI\ndeterministic — no LLM" { class: cli }
+prompt: "Markdown prompt\n(printed to stdout)" { class: data; shape: page }
+agent: "Agent · Claude / Codex\ndoes the semantic work" { class: agent }
+project: "Project files\n(src, tests, doc/…)" { class: proj }
+
+template -> grem: "manifest of folders,\nfiles & prompts" { style.stroke: "#4f46e5" }
+grem -> project: "places bytes\n(same in → same out)" { style: { stroke: "#0369a1"; stroke-width: 3 } }
+grem -> prompt: "renders" { style.stroke: "#0369a1" }
+prompt -> agent: "user hands it over" { style.stroke: "#d97706" }
+agent -> project: "reasons, edits, tests" { style: { stroke: "#d97706"; stroke-width: 3 } }
+
+note: "The CLI never calls a model. Every judgement-heavy step is gated behind an agent and the user." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

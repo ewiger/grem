@@ -1,0 +1,35 @@
+# 06 — Sync: the reconciliation loop (change propagates across)
+# Retells section 6 of ../grem-lifecycle.md
+
+direction: right
+
+classes: {
+  step:   { style: { fill: "#e0f2fe"; stroke: "#0369a1"; stroke-width: 2; font-color: "#0c4a6e"; border-radius: 8 } }
+  gate:   { style: { fill: "#f5f3ff"; stroke: "#7c3aed"; stroke-width: 2; font-color: "#5b21b6"; border-radius: 8 } }
+  result: { style: { fill: "#ecfdf5"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b"; border-radius: 8 } }
+}
+
+title: "grem sync doc/models src — plan → implement → test → document → diff" {
+  near: top-center
+  shape: text
+  style: { font-size: 22; bold: true; font-color: "#111827" }
+}
+
+diff: "diff" { class: step }
+disp: "user disposition\nbug / feature / accept" { class: gate }
+plan: "plan\n(acceptance checks)" { class: step }
+impl: "implement\ndiv raises · add sqrt" { class: step }
+test: "test\nprove the behavior" { class: step }
+document: "document\nupdate the lenses" { class: step }
+recheck: "diff again" { class: step }
+agree: "doc/models ⇄ src\nnow AGREE" { class: result }
+
+diff -> disp -> plan -> impl -> test -> document -> recheck
+recheck -> plan: "repeat until clean\nor blocked" { style: { stroke: "#475569"; stroke-dash: 4 } }
+recheck -> agree: "approved items resolved" { style: { stroke: "#059669"; stroke-width: 3 } }
+
+note: "Declarations shaped the code; the code's proven behavior flowed back into the docs — change moved ACROSS." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

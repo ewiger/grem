@@ -1,0 +1,41 @@
+# 08 — Upgrade: structure flows DOWN again, but guarded
+# Retells section 8 of ../grem-lifecycle.md
+
+direction: down
+
+classes: {
+  tmpl:   { style: { fill: "#eef2ff"; stroke: "#4f46e5"; stroke-width: 2; font-color: "#312e81"; border-radius: 8 } }
+  gate:   { style: { fill: "#f5f3ff"; stroke: "#7c3aed"; stroke-width: 2; font-color: "#5b21b6" } }
+  powned: { style: { fill: "#ecfdf5"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b"; border-radius: 8 } }
+  agent:  { style: { fill: "#fef3c7"; stroke: "#d97706"; stroke-width: 2; font-color: "#92400e"; border-radius: 8 } }
+  data:   { style: { fill: "#f9fafb"; stroke: "#6b7280"; stroke-width: 1; font-color: "#374151" } }
+}
+
+title: "grem upgrade ./calc — a guarded overlay" {
+  near: top-center
+  shape: text
+  style: { font-size: 24; bold: true; font-color: "#111827" }
+}
+
+clean: "Git worktree clean?\n(untracked included)" { class: gate; shape: diamond }
+newtmpl: "newer python template\n0.13 → 0.14" { class: tmpl }
+overlay: "overlay writer\ntemplate-owned layer only" { class: tmpl }
+gremignore: ".gremignore\nnames project-owned paths" { class: powned; shape: page }
+harness: ".grem/ harness + styles\nREFRESHED" { class: tmpl }
+protected: "src/ · tests/ · pyproject.toml\nREADME.md · doc/ knowledge" { class: powned }
+gitdiff: "unstaged git diff\n= merge surface" { class: data; shape: page }
+agent: "Agent summarizes the diff,\nre-applies real customizations" { class: agent }
+
+clean -> newtmpl: "clean ✓" { style.stroke: "#7c3aed" }
+newtmpl -> overlay: "scaffolds into temp,\nrejects conflicts"
+overlay -> harness: "refreshes" { style: { stroke: "#4f46e5"; stroke-width: 3 } }
+gremignore -> overlay: "declares what to skip" { style: { stroke: "#475569"; stroke-dash: 4 } }
+overlay -> protected: "SKIPPED — never re-stamped" { style: { stroke: "#dc2626"; stroke-dash: 4 } }
+overlay -> gitdiff: "leaves, unstaged" { style.stroke: "#4f46e5" }
+gitdiff -> agent: "review & merge" { style.stroke: "#d97706" }
+
+note: "Requires a clean worktree; changes land unstaged. Git is the rollback and comparison surface — no side is discarded blindly." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

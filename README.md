@@ -206,6 +206,11 @@ Like `diff`, `sync`, and `agent`, `new` only renders text. The agent does
 the actual work — the bundled `doc/slides` style, for instance, turns a prose doc
 into a numbered folder of D2 "visual story" diagrams.
 
+See [`doc/models/behavior/grem-lifecycle/`](doc/models/behavior/grem-lifecycle/)
+for a worked example: grem's own lifecycle told as a ten-slide D2 deck, generated
+by the `doc/slides` style from [its source
+doc](doc/models/behavior/grem-lifecycle.md).
+
 ## Knowledge model
 
 `doc/` contains categories of truth with different lifetimes:
@@ -220,6 +225,14 @@ into a numbered folder of D2 "visual story" diagrams.
 - `doc/proposals/` contains numbered ADR/RFC-style technical specifications.
   Reserve an ID such as `XYZ-0001` in `doc/proposals/README.md`, then create
   `doc/proposals/XYZ-0001/README.md`.
+- `doc/public/` is an *optional, reserved* home for **published** documentation —
+  a rendered API reference or book-format site (for example an `mkdocs` build)
+  generated from the knowledge base above. It is not stamped by default and not
+  every project needs it; grem only reserves the path. Building and publishing
+  stay with the project's own tooling — grem never publishes documentation.
+
+The [knowledge-model](doc/wiki/knowledge-model.hmd) wiki card is the cross-linked
+index of these categories.
 
 `.grem/` is not part of that knowledge base. It is versioned control data and a
 dormant prompt harness.

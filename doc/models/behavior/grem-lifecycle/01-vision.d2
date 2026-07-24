@@ -1,0 +1,48 @@
+# 01 — Vision: a project is more than source and tests
+# Retells section 1 of ../grem-lifecycle.md
+
+direction: down
+
+classes: {
+  base: {
+    style: { fill: "#eef2ff"; stroke: "#4f46e5"; stroke-width: 2; font-color: "#312e81"; border-radius: 8 }
+  }
+  home: {
+    style: { fill: "#ecfdf5"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b"; border-radius: 8 }
+  }
+  group: {
+    style: { fill: "#f8fafc"; stroke: "#94a3b8"; stroke-width: 1; font-color: "#334155" }
+  }
+}
+
+title: "A project is more than source and tests" {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true; font-color: "#111827" }
+}
+
+have: "What every project already has" {
+  class: group
+  src: "src/calc/\n(source)" { class: base }
+  tests: "tests/\n(tests)" { class: base }
+}
+
+adds: "What grem adds — durable homes for the other kinds of truth" {
+  class: group
+  models: "doc/models/\ndeclarations" { class: home }
+  wiki: "doc/wiki/\ncross-linked knowledge cards" { class: home }
+  issues: "doc/issues/\nactive work" { class: home }
+  memory: "doc/memory/\nreal-time decisions" { class: home }
+  proposals: "doc/proposals/\nnumbered specs" { class: home }
+  harness: ".grem/ harness\noperating instructions" { class: home }
+}
+
+have -> adds: "not enough\non its own" {
+  style: { stroke: "#4f46e5"; stroke-width: 2; font-color: "#4338ca" }
+}
+
+note: "grem stamps these homes into existence — grem stamps structure; agents do the work." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

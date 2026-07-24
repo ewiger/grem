@@ -1,0 +1,47 @@
+# 07 — Styles: knowledge flows SIDEWAYS (project → project)
+# Retells section 7 of ../grem-lifecycle.md
+
+direction: right
+
+classes: {
+  tmpl:  { style: { fill: "#eef2ff"; stroke: "#4f46e5"; stroke-width: 2; font-color: "#312e81" } }
+  cli:   { style: { fill: "#e0f2fe"; stroke: "#0369a1"; stroke-width: 2; font-color: "#0c4a6e"; border-radius: 8 } }
+  agent: { style: { fill: "#fef3c7"; stroke: "#d97706"; stroke-width: 2; font-color: "#92400e"; border-radius: 8 } }
+  proj:  { style: { fill: "#f8fafc"; stroke: "#059669"; stroke-width: 2; font-color: "#064e3b" } }
+  data:  { style: { fill: "#f9fafb"; stroke: "#6b7280"; stroke-width: 1; font-color: "#374151" } }
+}
+
+title: "grem new --style slides — a portable style travels sideways" {
+  near: top-center
+  shape: text
+  style: { font-size: 24; bold: true; font-color: "#111827" }
+}
+
+styledef: ".grem/styles/doc/slides\nPORTABLE prompt\n(tied to no repo)" { class: tmpl; shape: page }
+grem: "grem new\nvalidates source,\nprints style prompt" { class: cli }
+agent: "Agent applies it" { class: agent }
+
+projectA: "Alice's calc" {
+  class: proj
+  prose: "behavior lens\n(prose doc)" { class: data; shape: page }
+  deck: "grem-lifecycle/ deck\n(this D2 story)" { class: data; shape: page }
+}
+
+projectB: "Some other project" {
+  class: proj
+  prose: "any prose doc" { class: data; shape: page }
+  deck: "its own deck" { class: data; shape: page }
+}
+
+styledef -> grem: "rendered by" { style.stroke: "#4f46e5" }
+grem -> agent: "prompt"
+agent -> projectA.deck: "renders here" { style: { stroke: "#d97706"; stroke-width: 3 } }
+projectA.prose -> projectA.deck: "source of" { style.stroke: "#6b7280" }
+styledef -> projectB: "same style, unchanged" { style: { stroke: "#d97706"; stroke-dash: 4 } }
+projectB.prose -> projectB.deck: "source of" { style.stroke: "#6b7280" }
+
+note: "A style is carried by the template, not copy-pasted. The same prompt reproduces the style on any project." {
+  near: bottom-center
+  shape: text
+  style: { font-size: 13; italic: true; font-color: "#475569" }
+}

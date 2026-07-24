@@ -1,0 +1,48 @@
+# Knowledge model
+
+`doc/` is the project's knowledge base, split into **categories of truth with
+different lifetimes**. Each category is a distinct home, so a fact lives in
+exactly one place and is *referenced* from the others rather than restated. This
+card indexes those categories; the [[grem-cli]] stamps them and agents fill them.
+
+## The categories
+
+- `doc/models/` — the design layer: the [[models|lenses]] that declare *what* the
+  system is and *how it must behave*, before and alongside the code in `src/`.
+- `doc/wiki/` — this graph itself: cross-linked [[hyper-markdown]] (`.hmd`) cards,
+  one concept per file, joined by `[[wikilinks]]`.
+- `doc/issues/` — active work in flight, tracked on the [[kanban]] board.
+- `doc/memory/` — small real-time decisions, **reloaded at the start of every
+  agent invocation**; the shortest-lived, highest-frequency category.
+- `doc/proposals/` — numbered ADR/RFC-style specifications and substantial
+  decisions (reserve an ID in the index, then add the proposal's folder).
+- `doc/public/` — *optional, reserved* home for **published** documentation
+  (below).
+
+`.grem/` is deliberately **not** part of this model — it is [[templates|control
+data]] and a dormant prompt harness, not project knowledge.
+
+## Declared vs. demonstrated
+
+Nothing in `doc/` is automatically authoritative over the code. `doc/models/`
+*declares* the intended system while `src/` *demonstrates* the actual one; the
+two are compared and reconciled with [[grem-cli|`grem diff` and `grem sync`]]
+rather than one overwriting the other. `doc/memory/` is the standing exception
+that always wins attention — it is loaded on every turn, so its decisions are
+never missed.
+
+## Published documentation — `doc/public/`
+
+`doc/public/` is the reserved home for **published** documentation: an API
+reference, a rendered handbook, or a book-format site (for example an `mkdocs`
+build) — the *outward-facing* view produced **from** the knowledge base above,
+for readers who never open the repo.
+
+It is **optional and not stamped by default**: most projects never need it, so
+grem only reserves the path so published output has one predictable home instead
+of scattering. When a project does want it, the project's **own** tooling builds
+and publishes into `doc/public/` — grem never lints, builds, or publishes
+documentation, by design. Treat everything there as **generated output**; the
+source of truth stays in `doc/models/`, `doc/wiki/`, and `doc/proposals/`.
+
+See [[grem-cli]] and [[hyper-markdown]].
