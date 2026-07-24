@@ -22,7 +22,7 @@ from grem.upgrade import overlay_reference, require_clean_git_worktree
 
 
 app = typer.Typer(
-    help="Stamp a project from a deterministic template.",
+    help="Bootstrap and control AI-assisted projects from deterministic templates.",
     no_args_is_help=True,
 )
 
@@ -46,7 +46,7 @@ def main(
         ),
     ] = False,
 ) -> None:
-    """Stamp projects from declarative templates."""
+    """Bootstrap and control AI-assisted projects from deterministic templates."""
 
 
 @contextmanager

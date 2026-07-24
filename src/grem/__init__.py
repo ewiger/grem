@@ -1,4 +1,4 @@
-"""grem: deterministic project scaffolding."""
+"""grem: deterministic project bootstrap and control for AI-assisted development."""
 
 from importlib.metadata import PackageNotFoundError, version
 

@@ -1,7 +1,7 @@
 kind: layout
 schema: 1
 template: python
-template_version: 0.7.0
+template_version: 0.12.0
 grem_version: 0.1.0
 generated:
   directories:

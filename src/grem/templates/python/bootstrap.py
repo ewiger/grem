@@ -9,7 +9,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.11.0"
+VERSION = "0.12.0"
 
 
 class Empty(Moniker):

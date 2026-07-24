@@ -117,7 +117,7 @@ def test_python_template_declares_semver_version() -> None:
     template = load_manifest(bundled_template())
 
     assert template.name == "python"
-    assert str(template.version) == "0.11.0"
+    assert str(template.version) == "0.12.0"
 
 
 def test_scaffold_does_not_execute_declaration_methods(tmp_path: Path) -> None:
