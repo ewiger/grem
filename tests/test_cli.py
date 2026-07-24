@@ -2,13 +2,18 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import semver
 from typer.testing import CliRunner
 
 from grem import __version__
 from grem.cli import app
+from grem.templates.python.bootstrap import VERSION as TEMPLATE_VERSION
 
 
 runner = CliRunner()
+
+CURRENT_VERSION = TEMPLATE_VERSION
+NEXT_VERSION = str(semver.Version.parse(TEMPLATE_VERSION).bump_minor())
 
 
 def commit_project(project: Path) -> None:
@@ -35,17 +40,20 @@ def newer_template(tmp_path: Path) -> Path:
     bundled = (
         Path(__file__).parents[1] / "src" / "grem" / "templates" / "python"
     )
-    target_template = tmp_path / "python-0.7.0"
+    target_template = tmp_path / f"python-{NEXT_VERSION}"
     shutil.copytree(bundled, target_template)
     bootstrap = target_template / "bootstrap.py"
     bootstrap.write_text(
-        bootstrap.read_text().replace('VERSION = "0.6.0"', 'VERSION = "0.7.0"')
+        bootstrap.read_text().replace(
+            f'VERSION = "{CURRENT_VERSION}"',
+            f'VERSION = "{NEXT_VERSION}"',
+        )
     )
     layout = target_template / "content" / ".grem" / "config.yaml"
     layout.write_text(
         layout.read_text().replace(
-            "template_version: 0.6.0",
-            "template_version: 0.7.0",
+            f"template_version: {CURRENT_VERSION}",
+            f"template_version: {NEXT_VERSION}",
         )
     )
     readme = target_template / "content" / "README.md"
@@ -76,7 +84,10 @@ def test_scaffold_stamps_grem_cli_version(tmp_path: Path) -> None:
     assert result.exit_code == 0
     config = (target / ".grem" / "config.yaml").read_text()
     assert f"grem_version: {__version__}" in config
-    assert f"template_version: 0.6.0\ngrem_version: {__version__}\n" in config
+    assert (
+        f"template_version: {CURRENT_VERSION}\ngrem_version: {__version__}\n"
+        in config
+    )
 
 
 def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
@@ -85,7 +96,7 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     result = runner.invoke(app, ["scaffold", "python", str(target)])
 
     assert result.exit_code == 0
-    assert "Scaffolded 25 entries" in result.stdout
+    assert "Scaffolded 29 entries" in result.stdout
     assert (target / "src" / "myproject").is_dir()
     assert (target / "doc" / "models" / "behavior").is_dir()
     assert (target / "doc" / "proposals" / "README.md").is_file()
@@ -152,7 +163,7 @@ def test_new_command_prints_style_prompt(tmp_path: Path) -> None:
     assert scaffold_result.exit_code == 0
 
     style = project / ".grem" / "styles" / "doc" / "slides"
-    style.mkdir(parents=True)
+    style.mkdir(parents=True, exist_ok=True)
     (style / "prompt.md").write_text("MARKER-STYLE-BODY\n")
     source = project / "doc" / "wiki" / "example.md"
     source.write_text("# Example\n")
@@ -191,23 +202,20 @@ def test_new_command_reports_missing_style(tmp_path: Path) -> None:
             "--type",
             "doc",
             "--style",
-            "slides",
+            "nonexistent",
             "--project",
             str(project),
         ],
     )
 
     assert result.exit_code == 1
-    assert "no doc/slides style" in result.stderr
+    assert "no doc/nonexistent style" in result.stderr
 
 
 def test_new_command_rejects_source_outside_project(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
     scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
     assert scaffold_result.exit_code == 0
-    style = project / ".grem" / "styles" / "doc" / "slides"
-    style.mkdir(parents=True)
-    (style / "prompt.md").write_text("body\n")
 
     result = runner.invoke(
         app,
@@ -225,6 +233,34 @@ def test_new_command_rejects_source_outside_project(tmp_path: Path) -> None:
 
     assert result.exit_code == 1
     assert "outside the project" in result.stderr
+
+
+def test_scaffolded_project_ships_slides_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    assert scaffold_result.exit_code == 0
+    assert (
+        project / ".grem" / "styles" / "doc" / "slides" / "prompt.md"
+    ).is_file()
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/slides`" in result.stdout
+    assert "numbered D2" in result.stdout
 
 
 def test_new_command_prints_shipped_slides_style() -> None:
@@ -265,15 +301,15 @@ def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> No
     )
 
     assert result.exit_code == 0
-    assert "Current version: `0.6.0`" in result.stdout
-    assert "Target version: `0.7.0`" in result.stdout
+    assert f"Current version: `{CURRENT_VERSION}`" in result.stdout
+    assert f"Target version: `{NEXT_VERSION}`" in result.stdout
     assert "Files overwritten:" in result.stdout
     assert "resulting unstaged Git diff" in result.stdout
     assert project.joinpath("README.md").read_text() == (
         "# myproject\n\nUpgraded template.\n"
     )
     upgraded_config = (project / ".grem" / "config.yaml").read_text()
-    assert "template_version: 0.7.0" in upgraded_config
+    assert f"template_version: {NEXT_VERSION}" in upgraded_config
     assert f"grem_version: {__version__}" in upgraded_config
     status = subprocess.run(
         ["git", "status", "--short"],
@@ -307,7 +343,7 @@ def test_interactive_upgrade_can_cancel_before_overlay(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "Upgrade cancelled" in result.stdout
-    assert "template_version: 0.6.0" in (
+    assert f"template_version: {CURRENT_VERSION}" in (
         project / ".grem" / "config.yaml"
     ).read_text()
     status = subprocess.run(
@@ -335,6 +371,6 @@ def test_upgrade_rejects_dirty_git_worktree(tmp_path: Path) -> None:
     assert result.exit_code == 1
     assert "Git worktree must be clean" in result.stderr
     assert (project / "README.md").read_text() == "uncommitted work\n"
-    assert "template_version: 0.6.0" in (
+    assert f"template_version: {CURRENT_VERSION}" in (
         project / ".grem" / "config.yaml"
     ).read_text()

@@ -43,6 +43,10 @@ EXPECTED_PATHS = (
     Path(".grem/harness/instructions.md"),
     Path(".grem/harness/sync.md"),
     Path(".grem/harness/upgrade.md"),
+    Path(".grem/styles"),
+    Path(".grem/styles/doc"),
+    Path(".grem/styles/doc/slides"),
+    Path(".grem/styles/doc/slides/prompt.md"),
     Path("AGENTS.md"),
     Path("CLAUDE.md"),
     Path("README.md"),
@@ -101,7 +105,7 @@ def test_python_template_declares_semver_version() -> None:
     template = load_manifest(bundled_template())
 
     assert template.name == "python"
-    assert str(template.version) == "0.6.0"
+    assert str(template.version) == "0.7.0"
 
 
 def test_scaffold_does_not_execute_declaration_methods(tmp_path: Path) -> None:

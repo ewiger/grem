@@ -47,6 +47,10 @@ myproject/
       instructions.md
       sync.md
       upgrade.md
+    styles/
+      doc/
+        slides/
+          prompt.md
   src/myproject/
   tests/
   doc/
@@ -243,7 +247,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.6.0"
+VERSION = "0.7.0"
 
 
 class Empty(Moniker):

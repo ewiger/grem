@@ -1,11 +1,14 @@
 kind: layout
 schema: 1
 template: python
-template_version: 0.6.0
+template_version: 0.7.0
 generated:
   directories:
     - .grem
     - .grem/harness
+    - .grem/styles
+    - .grem/styles/doc
+    - .grem/styles/doc/slides
     - doc
     - doc/issues
     - doc/memory
@@ -25,6 +28,7 @@ generated:
     - .grem/harness/instructions.md
     - .grem/harness/sync.md
     - .grem/harness/upgrade.md
+    - .grem/styles/doc/slides/prompt.md
     - AGENTS.md
     - CLAUDE.md
     - README.md

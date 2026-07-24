@@ -9,7 +9,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.6.0"
+VERSION = "0.7.0"
 
 
 class Empty(Moniker):
@@ -52,6 +52,24 @@ class Harness(Moniker):
         ...
 
 
+class Slides(Moniker):
+    @file("prompt.md")
+    def prompt(self):
+        ...
+
+
+class DocStyles(Moniker):
+    @folder
+    def slides(self) -> Slides:
+        ...
+
+
+class Styles(Moniker):
+    @folder
+    def doc(self) -> DocStyles:
+        ...
+
+
 class Grem(Moniker):
     @file("config.yaml")
     def config(self):
@@ -59,6 +77,10 @@ class Grem(Moniker):
 
     @folder
     def harness(self) -> Harness:
+        ...
+
+    @folder
+    def styles(self) -> Styles:
         ...
 
 
