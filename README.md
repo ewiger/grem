@@ -44,6 +44,10 @@ The bundled Python template produces:
 
 ```text
 myproject/
+  .claude/
+    skills/
+      grem/
+        SKILL.md
   .grem/
     config.yaml
     harness/

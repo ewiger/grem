@@ -33,6 +33,8 @@ grem = [
     "templates/*/content/**/*",
     "templates/*/content/.grem/*",
     "templates/*/content/.grem/**/*",
+    "templates/*/content/.claude/*",
+    "templates/*/content/.claude/**/*",
 ]
 
 [tool.setuptools.exclude-package-data]

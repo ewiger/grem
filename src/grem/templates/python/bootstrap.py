@@ -9,7 +9,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.10.0"
+VERSION = "0.11.0"
 
 
 class Empty(Moniker):
@@ -104,6 +104,24 @@ class Styles(Moniker):
         ...
 
 
+class SkillGrem(Moniker):
+    @file("SKILL.md")
+    def skill(self):
+        ...
+
+
+class Skills(Moniker):
+    @folder
+    def grem(self) -> SkillGrem:
+        ...
+
+
+class ClaudeConfig(Moniker):
+    @folder
+    def skills(self) -> Skills:
+        ...
+
+
 class Grem(Moniker):
     @file("config.yaml")
     def config(self):
@@ -156,6 +174,10 @@ class Source(Moniker):
 
 
 class Project(Moniker):
+    @folder(".claude")
+    def claude_config(self) -> ClaudeConfig:
+        ...
+
     @folder(".grem")
     def grem(self) -> Grem:
         ...

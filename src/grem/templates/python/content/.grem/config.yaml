@@ -1,9 +1,12 @@
 kind: layout
 schema: 1
 template: python
-template_version: 0.10.0
+template_version: 0.11.0
 generated:
   directories:
+    - .claude
+    - .claude/skills
+    - .claude/skills/grem
     - .grem
     - .grem/harness
     - .grem/styles
@@ -26,6 +29,7 @@ generated:
     - src/myproject
     - tests
   files:
+    - .claude/skills/grem/SKILL.md
     - .grem/config.yaml
     - .grem/harness/README.md
     - .grem/harness/diff.md

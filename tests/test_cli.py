@@ -96,10 +96,11 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     result = runner.invoke(app, ["init", str(target)])
 
     assert result.exit_code == 0
-    assert "Scaffolded 37 entries" in result.stdout
+    assert "Scaffolded 41 entries" in result.stdout
     assert (target / "src" / "myproject").is_dir()
     assert (target / "doc" / "models" / "behavior").is_dir()
     assert (target / "doc" / "proposals" / "README.md").is_file()
+    assert (target / ".claude" / "skills" / "grem" / "SKILL.md").is_file()
     assert (target / "AGENTS.md").is_file()
     assert "Ignore `.grem/**` during ordinary work" in (
         target / "AGENTS.md"
