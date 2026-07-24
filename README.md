@@ -76,10 +76,11 @@ paths, missing template sources, and non-empty targets.
 | `grem diff A B` | Validates two scopes and prints a semantic-diff prompt | Returns numbered inconsistencies |
 | `grem sync A B` | Validates two scopes and prints the full reconciliation prompt | Plans, implements, tests, documents, and diffs |
 | `grem instructions [PROJECT]` | Reads configured instruction targets and prints a prompt | Aligns `AGENTS.md`, `CLAUDE.md`, and other configured files |
+| `grem new --type TYPE --style STYLE PATH` | Validates a source file and prints a stored documentation-style prompt | Applies the style to the source file |
 | `grem upgrade [PROJECT]` | Overlays a newer template in a clean Git worktree | Reviews the Git diff and helps merge customizations |
 
-`diff`, `sync`, and `instructions` do not modify project files or invoke an
-LLM. Their output is copied into an agent by the user. `upgrade` is the
+`diff`, `sync`, `instructions`, and `new` do not modify project files or invoke
+an LLM. Their output is copied into an agent by the user. `upgrade` is the
 controlled exception: it overlays template files first, then prints the merge
 prompt.
 
@@ -141,6 +142,24 @@ diff → user disposition → plan → implement → test → document → diff
 
 Neither side is automatically authoritative. The agent uses project evidence,
 `doc/memory/`, and user decisions to reconcile the scopes.
+
+## Documentation styles
+
+A documentation style is a portable prompt that describes how to replicate one
+documentation style on any project — not tied to a specific repo. Styles live
+under `.grem/styles/<type>/<style>/prompt.md`, where `type` groups styles by the
+area they target (for example `doc`).
+
+`grem new` validates a source file inside the project and prints the matching
+style prompt, parameterized with that source path, for an agent to execute:
+
+```console
+uv run grem new doc/wiki/grem-cli.hmd --type doc --style slides
+```
+
+Like `diff`, `sync`, and `instructions`, `new` only renders text. The agent does
+the actual work — the bundled `doc/slides` style, for instance, turns a prose doc
+into a numbered folder of D2 "visual story" diagrams.
 
 ## Knowledge model
 

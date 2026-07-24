@@ -146,6 +146,111 @@ def test_instructions_command_uses_configured_paths(tmp_path: Path) -> None:
     assert "ignore `.grem/**`" in result.stdout
 
 
+def test_new_command_prints_style_prompt(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    assert scaffold_result.exit_code == 0
+
+    style = project / ".grem" / "styles" / "doc" / "slides"
+    style.mkdir(parents=True)
+    (style / "prompt.md").write_text("MARKER-STYLE-BODY\n")
+    source = project / "doc" / "wiki" / "example.md"
+    source.write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/slides`" in result.stdout
+    assert "Source document: `doc/wiki/example.md`" in result.stdout
+    assert "MARKER-STYLE-BODY" in result.stdout
+
+
+def test_new_command_reports_missing_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    assert scaffold_result.exit_code == 0
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "no doc/slides style" in result.stderr
+
+
+def test_new_command_rejects_source_outside_project(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    assert scaffold_result.exit_code == 0
+    style = project / ".grem" / "styles" / "doc" / "slides"
+    style.mkdir(parents=True)
+    (style / "prompt.md").write_text("body\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "../outside.md",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "outside the project" in result.stderr
+
+
+def test_new_command_prints_shipped_slides_style() -> None:
+    repo_root = Path(__file__).parents[1]
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/grem-cli.hmd",
+            "--type",
+            "doc",
+            "--style",
+            "slides",
+            "--project",
+            str(repo_root),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/slides`" in result.stdout
+    assert "Source document: `doc/wiki/grem-cli.hmd`" in result.stdout
+    assert "numbered D2" in result.stdout
+    assert "One idea per diagram" in result.stdout
+
+
 def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
     scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])

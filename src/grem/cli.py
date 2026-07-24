@@ -106,6 +106,28 @@ def _scope_prompt(
     return left_scope, right_scope, prompt.read_text()
 
 
+def _safe_component(value: str, *, label: str) -> str:
+    if (
+        not value
+        or "/" in value
+        or "\\" in value
+        or "\x00" in value
+        or value in {".", ".."}
+    ):
+        raise ScaffoldError(f"invalid {label}: {value!r}")
+    return value
+
+
+def _style_prompt(project: Path, type_: str, style: str) -> tuple[str, str, str]:
+    _layout(project)
+    kind = _safe_component(type_, label="type")
+    name = _safe_component(style, label="style")
+    prompt = project / ".grem" / "styles" / kind / name / "prompt.md"
+    if not prompt.is_file():
+        raise ScaffoldError(f"no {kind}/{name} style in {project}")
+    return kind, name, prompt.read_text()
+
+
 @app.command()
 def scaffold(
     template: Annotated[str, typer.Argument(help="Template name or directory.")],
@@ -246,6 +268,49 @@ def instructions(
                 target_lines,
                 "",
                 prompt.read_text(),
+            )
+        ),
+        nl=False,
+    )
+
+
+@app.command()
+def new(
+    path: Annotated[
+        Path,
+        typer.Argument(help="Source file the style is applied to."),
+    ],
+    type_: Annotated[
+        str,
+        typer.Option("--type", "-t", help="Style category, such as a doc folder."),
+    ],
+    style: Annotated[
+        str,
+        typer.Option("--style", "-s", help="Named style under the category."),
+    ],
+    project: Annotated[
+        Path,
+        typer.Option("--project", "-p", help="Scaffolded project directory."),
+    ] = Path("."),
+) -> None:
+    """Print a documentation-style prompt for applying STYLE to a source file."""
+
+    try:
+        kind, name, prompt = _style_prompt(project, type_, style)
+        source = _project_scope(project, path)
+    except ScaffoldError as error:
+        typer.echo(f"error: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    typer.echo(
+        "\n".join(
+            (
+                "# Apply a documentation style",
+                "",
+                f"Style: `{kind}/{name}`",
+                f"Source document: `{source.as_posix()}`",
+                "",
+                prompt,
             )
         ),
         nl=False,

@@ -9,6 +9,9 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
   declared template files into an absent or empty target.
 - `grem instructions [PROJECT]` reads [[grem-config]] and prints the prompt for
   aligning configured agent instruction files.
+- `grem new --type TYPE --style STYLE PATH` validates a source file inside the
+  project and prints the documentation-style prompt stored under
+  `.grem/styles/<type>/<style>/prompt.md`, parameterized with that source path.
 - `grem diff A B` validates two project-local scopes and prints the semantic
   comparison prompt for a numbered list of inconsistencies.
 - `grem sync A B` validates the same kinds of scopes and prints the full plan →
@@ -17,8 +20,13 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
   template, and prints the target template's prompt for reviewing and merging
   the resulting unstaged diff. `--interactive` confirms before writing.
 
-`scaffold` and `upgrade` write project files. `diff`, `sync`, and `instructions`
-only produce text for a user to copy into an LLM agent such as Claude or Codex.
+`scaffold` and `upgrade` write project files. `diff`, `sync`, `instructions`,
+and `new` only produce text for a user to copy into an LLM agent such as Claude
+or Codex.
+
+Documentation styles are portable prompts under `.grem/styles/<type>/<style>/`,
+each describing how to replicate one documentation style on any project. `new`
+renders one against a chosen source file; the agent performs the actual work.
 
 ## Layers
 
