@@ -149,18 +149,55 @@ def test_scaffold_rejects_duplicate_output_paths(tmp_path: Path) -> None:
         scaffold(Root, source, tmp_path / "output")
 
 
-def test_scaffold_rejects_nonempty_target(tmp_path: Path) -> None:
+def test_scaffold_allows_unrelated_files_in_target(tmp_path: Path) -> None:
+    class Root(Moniker):
+        @file("README.md")
+        def readme(self):
+            ...
+
+    source = tmp_path / "content"
+    source.mkdir()
+    (source / "README.md").write_text("hello\n")
+    target = tmp_path / "output"
+    target.mkdir()
+    (target / "unrelated.txt").write_text("keep me\n")
+
+    scaffold(Root, source, target)
+
+    assert (target / "README.md").read_text() == "hello\n"
+    assert (target / "unrelated.txt").read_text() == "keep me\n"
+
+
+def test_scaffold_rejects_existing_grem_project(tmp_path: Path) -> None:
     class Root(Moniker):
         pass
 
     source = tmp_path / "content"
     source.mkdir()
     target = tmp_path / "output"
-    target.mkdir()
-    (target / "existing").write_text("")
+    (target / ".grem").mkdir(parents=True)
 
-    with pytest.raises(ScaffoldError, match="not empty"):
+    with pytest.raises(ScaffoldError, match="already a grem project"):
         scaffold(Root, source, target)
+
+
+def test_scaffold_refuses_to_overwrite_existing_files(tmp_path: Path) -> None:
+    class Root(Moniker):
+        @file("README.md")
+        def readme(self):
+            ...
+
+    source = tmp_path / "content"
+    source.mkdir()
+    (source / "README.md").write_text("new\n")
+    target = tmp_path / "output"
+    target.mkdir()
+    (target / "README.md").write_text("existing\n")
+
+    with pytest.raises(ScaffoldError, match="would be overwritten"):
+        scaffold(Root, source, target)
+
+    assert (target / "README.md").read_text() == "existing\n"
 
 
 def test_stamp_grem_version_inserts_after_template_version(tmp_path: Path) -> None:

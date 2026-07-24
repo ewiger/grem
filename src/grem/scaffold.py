@@ -206,11 +206,25 @@ def scaffold(
 
     plan = _build_plan(root, source_root)
 
-    if target.exists():
-        if not target.is_dir():
-            raise ScaffoldError(f"target is not a directory: {target}")
-        if next(target.iterdir(), None) is not None:
-            raise ScaffoldError(f"target directory is not empty: {target}")
+    if target.exists() and not target.is_dir():
+        raise ScaffoldError(f"target is not a directory: {target}")
+
+    # Like ``git init``, grem writes into the current (or named) directory even
+    # when it already holds unrelated files. A ``.grem`` folder marks a project
+    # that has already been initialized, so refuse rather than re-stamp it.
+    if (target / ".grem").exists():
+        raise ScaffoldError(f"target is already a grem project: {target}")
+
+    conflicts = sorted(
+        entry.path.as_posix()
+        for entry in plan
+        if entry.kind == "file" and target.joinpath(*entry.path.parts).exists()
+    )
+    if conflicts:
+        raise ScaffoldError(
+            "target already contains files that would be overwritten: "
+            + ", ".join(conflicts)
+        )
 
     target.mkdir(parents=True, exist_ok=True)
     for entry in plan:

@@ -79,7 +79,7 @@ def test_cli_version_matches_pyproject() -> None:
 def test_scaffold_stamps_grem_cli_version(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
 
-    result = runner.invoke(app, ["scaffold", "python", str(target)])
+    result = runner.invoke(app, ["init", str(target)])
 
     assert result.exit_code == 0
     config = (target / ".grem" / "config.yaml").read_text()
@@ -93,7 +93,7 @@ def test_scaffold_stamps_grem_cli_version(tmp_path: Path) -> None:
 def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
 
-    result = runner.invoke(app, ["scaffold", "python", str(target)])
+    result = runner.invoke(app, ["init", str(target)])
 
     assert result.exit_code == 0
     assert "Scaffolded 37 entries" in result.stdout
@@ -111,7 +111,7 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
 
 def test_sync_command_prints_project_prompt(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(target)])
+    scaffold_result = runner.invoke(app, ["init", str(target)])
     assert scaffold_result.exit_code == 0
 
     result = runner.invoke(
@@ -127,7 +127,7 @@ def test_sync_command_prints_project_prompt(tmp_path: Path) -> None:
 
 def test_diff_command_prints_numbered_inconsistency_prompt(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(target)])
+    scaffold_result = runner.invoke(app, ["init", str(target)])
     assert scaffold_result.exit_code == 0
 
     result = runner.invoke(
@@ -144,7 +144,7 @@ def test_diff_command_prints_numbered_inconsistency_prompt(tmp_path: Path) -> No
 
 def test_instructions_command_uses_configured_paths(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(target)])
+    scaffold_result = runner.invoke(app, ["init", str(target)])
     assert scaffold_result.exit_code == 0
 
     result = runner.invoke(app, ["instructions", str(target)])
@@ -159,7 +159,7 @@ def test_instructions_command_uses_configured_paths(tmp_path: Path) -> None:
 
 def test_new_command_prints_style_prompt(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
 
     style = project / ".grem" / "styles" / "doc" / "slides"
@@ -190,7 +190,7 @@ def test_new_command_prints_style_prompt(tmp_path: Path) -> None:
 
 def test_new_command_reports_missing_style(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
     (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
 
@@ -214,7 +214,7 @@ def test_new_command_reports_missing_style(tmp_path: Path) -> None:
 
 def test_new_command_rejects_source_outside_project(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
 
     result = runner.invoke(
@@ -237,7 +237,7 @@ def test_new_command_rejects_source_outside_project(tmp_path: Path) -> None:
 
 def test_scaffolded_project_ships_slides_style(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
     assert (
         project / ".grem" / "styles" / "doc" / "slides" / "prompt.md"
@@ -265,7 +265,7 @@ def test_scaffolded_project_ships_slides_style(tmp_path: Path) -> None:
 
 def test_scaffolded_project_ships_adr_style(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
     assert (
         project / ".grem" / "styles" / "doc" / "adr" / "prompt.md"
@@ -294,7 +294,7 @@ def test_scaffolded_project_ships_adr_style(tmp_path: Path) -> None:
 
 def test_scaffolded_project_ships_lenses_style(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
     assert (
         project / ".grem" / "styles" / "doc" / "lenses" / "prompt.md"
@@ -322,7 +322,7 @@ def test_scaffolded_project_ships_lenses_style(tmp_path: Path) -> None:
 
 def test_scaffolded_project_ships_hmd_style(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
     assert (
         project / ".grem" / "styles" / "doc" / "hmd" / "prompt.md"
@@ -374,7 +374,7 @@ def test_new_command_prints_shipped_slides_style() -> None:
 
 def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    scaffold_result = runner.invoke(app, ["init", str(project)])
     assert scaffold_result.exit_code == 0
     commit_project(project)
 
@@ -409,7 +409,7 @@ def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> No
 
 def test_interactive_upgrade_can_cancel_before_overlay(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    runner.invoke(app, ["scaffold", "python", str(project)])
+    runner.invoke(app, ["init", str(project)])
     commit_project(project)
 
     target_template = newer_template(tmp_path)
@@ -443,7 +443,7 @@ def test_interactive_upgrade_can_cancel_before_overlay(tmp_path: Path) -> None:
 
 def test_upgrade_rejects_dirty_git_worktree(tmp_path: Path) -> None:
     project = tmp_path / "myproject"
-    runner.invoke(app, ["scaffold", "python", str(project)])
+    runner.invoke(app, ["init", str(project)])
     commit_project(project)
     (project / "README.md").write_text("uncommitted work\n")
     target_template = newer_template(tmp_path)

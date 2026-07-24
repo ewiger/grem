@@ -5,8 +5,12 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
 
 ## Commands
 
-- `grem scaffold TEMPLATE TARGET` creates the declared folders and copies the
-  declared template files into an absent or empty target.
+- `grem init [TARGET]` scaffolds the declared folders and copies the declared
+  template files into the target. Like `git init` it defaults to the bundled
+  `python` template (override with `--template`/`-t`) and to the current
+  directory. It writes alongside unrelated files but refuses to overwrite
+  existing ones, and refuses to run when the target already holds a `.grem`
+  folder.
 - `grem instructions [PROJECT]` reads [[grem-config]] and prints the prompt for
   aligning configured agent instruction files.
 - `grem new --type TYPE --style STYLE PATH` validates a source file inside the
@@ -20,7 +24,7 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
   template, and prints the target template's prompt for reviewing and merging
   the resulting unstaged diff. `--interactive` confirms before writing.
 
-`scaffold` and `upgrade` write project files. `diff`, `sync`, `instructions`,
+`init` and `upgrade` write project files. `diff`, `sync`, `instructions`,
 and `new` only produce text for a user to copy into an LLM agent such as Claude
 or Codex.
 

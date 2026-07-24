@@ -32,8 +32,13 @@ From this checkout:
 
 ```console
 uv sync
-uv run grem scaffold python ./myproject
+uv run grem init ./myproject
 ```
+
+Like `git init`, `grem init` defaults to the bundled `python` template and, with
+no argument, initializes the current directory. It refuses to run when the
+target already holds a `.grem` folder. Pass `--template/-t` to pick another
+template.
 
 The bundled Python template produces:
 
@@ -77,14 +82,16 @@ myproject/
   README.md
 ```
 
-The target must be absent or empty. grem rejects unsafe paths, duplicate output
-paths, missing template sources, and non-empty targets.
+grem writes into the target even when it already holds unrelated files, but it
+refuses to overwrite existing files and refuses to re-initialize a directory
+that already holds a `.grem` folder. It also rejects unsafe paths, duplicate
+output paths, and missing template sources.
 
 ## Command model
 
 | Command | CLI action | Agent action |
 | --- | --- | --- |
-| `grem scaffold TEMPLATE TARGET` | Writes the declared project tree | None |
+| `grem init [TARGET]` | Scaffolds the declared project tree (defaults to the `python` template in the current directory) | None |
 | `grem diff A B` | Validates two scopes and prints a semantic-diff prompt | Returns numbered inconsistencies |
 | `grem sync A B` | Validates two scopes and prints the full reconciliation prompt | Plans, implements, tests, documents, and diffs |
 | `grem instructions [PROJECT]` | Reads configured instruction targets and prints a prompt | Aligns `AGENTS.md`, `CLAUDE.md`, and other configured files |
@@ -286,7 +293,7 @@ machine-specific values.
 Use a local template directory while developing one:
 
 ```console
-uv run grem scaffold ./path/to/template ./myproject
+uv run grem init ./myproject --template ./path/to/template
 ```
 
 ## Boundaries

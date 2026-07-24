@@ -129,11 +129,22 @@ def _style_prompt(project: Path, type_: str, style: str) -> tuple[str, str, str]
 
 
 @app.command()
-def scaffold(
-    template: Annotated[str, typer.Argument(help="Template name or directory.")],
-    target: Annotated[Path, typer.Argument(help="Empty output directory.")],
+def init(
+    target: Annotated[
+        Path,
+        typer.Argument(help="Directory to initialize (defaults to the current one)."),
+    ] = Path("."),
+    template: Annotated[
+        str,
+        typer.Option("--template", "-t", help="Template name or directory."),
+    ] = "python",
 ) -> None:
-    """Scaffold TARGET from TEMPLATE."""
+    """Scaffold a project from a template.
+
+    Like ``git init``, this defaults to the bundled ``python`` template in the
+    current directory. It refuses to run when the target already holds a
+    ``.grem`` folder, i.e. it is already a grem project.
+    """
 
     try:
         with _template_directory(template) as template_path:
