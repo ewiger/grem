@@ -52,6 +52,9 @@ which capture how the existing `doc/wiki/` cards are already written.
 
 ## Wiki and Markdown features
 
+The wiki graph is **closed to `doc/wiki/`**: a `[[ ]]` link resolves only to a
+card in the wiki space (any subfolder), never to a file elsewhere in the repo.
+
 - **`[[slug]]`** links a concept to its card. Link the first, most meaningful
   mention of any concept another card owns.
 - **`[[slug|display text]]`** links while showing different surface text

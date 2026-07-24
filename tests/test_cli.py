@@ -96,7 +96,7 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     result = runner.invoke(app, ["init", str(target)])
 
     assert result.exit_code == 0
-    assert "Scaffolded 41 entries" in result.stdout
+    assert "Scaffolded 47 entries" in result.stdout
     assert (target / "src" / "myproject").is_dir()
     assert (target / "doc" / "models" / "behavior").is_dir()
     assert (target / "doc" / "proposals" / "README.md").is_file()

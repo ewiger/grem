@@ -28,7 +28,8 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
 `init` and `upgrade` write project files. `diff`, `sync`, `agent`, and `new`
 only produce text for a user to copy into an LLM agent such as Claude or Codex.
 Every prompt command prints to stdout (pipe it, e.g. `grem agent | pbcopy`) and
-accepts `--copy`/`-c` to place the prompt on the clipboard directly.
+accepts `--copy`/`-c` to place the prompt on the clipboard directly. A top-level
+`--version`/`-v` prints the CLI version and exits.
 
 Documentation styles are portable prompts under `.grem/styles/<type>/<style>/`,
 each describing how to replicate one documentation style on any project. `new`
@@ -36,7 +37,8 @@ renders one against a chosen source file; the agent performs the actual work.
 
 ## Layers
 
-The CLI layer loads and validates declarations, config, and SemVer values.
-Template content owns generated project knowledge and agent behavior.
+The CLI layer loads and validates [[templates|template declarations]], config,
+and SemVer values. Template content owns generated project knowledge and agent
+behavior.
 
-See [[grem-config]].
+See [[grem-config]] and [[templates]].

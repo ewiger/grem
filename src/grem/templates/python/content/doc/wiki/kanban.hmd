@@ -1,12 +1,10 @@
 # Kanban board
 
 `doc/issues/` is the project's active-work layer: a lightweight **Kanban board**
-of numbered **issues** currently in flight. It is distinct from the
-[[grem-config|control record]] under `.grem/`, and from
-[proposals](../proposals/README.md), which record *decisions* rather than the
-work that carries them out. Each issue is one flat Markdown file named
-`NNNN-slug.md` (`0001-incomplete-init-and-upgrade.md`); the folder stays flat,
-with no per-topic subfolders.
+of numbered **issues** currently in flight. It is distinct from proposals under
+`doc/proposals/`, which record *decisions* rather than the work that carries them
+out. Each issue is one flat Markdown file named `NNNN-slug.md`
+(`0001-first-issue.md`); the folder stays flat, with no per-topic subfolders.
 
 ## The index is `kanban.yaml`
 
@@ -30,8 +28,8 @@ board:
     backlog: []
     todo:
       - id: "0001"
-        title: Incomplete init and upgrade
-        file: 0001-incomplete-init-and-upgrade.md
+        title: First issue
+        file: 0001-first-issue.md
     doing: []
     done: []
 ```
@@ -52,11 +50,12 @@ Top to bottom is the flow of work:
 
 When an issue is **done** and no longer relevant, move its file to
 `.grem/issues/archive/` and delete its card from `kanban.yaml`. That destination
-sits under the already-ignored `.grem/` folder, so finished work leaves ordinary
-agent context without a separate ignore list — see [[grem-config]].
+sits under the already-ignored `.grem/` control folder, so finished work leaves
+ordinary agent context without a separate ignore list.
 
 ## Place in the knowledge base
 
-[[models]] declares *what* the system is; proposals record *decisions*; the
-Kanban board tracks the *work in flight* that moves a model or proposal toward
-code under `src/`. See [[grem-cli]] for the commands that stamp this structure.
+The design layer under `doc/models/` declares *what* the system is; proposals
+record *decisions*; the Kanban board tracks the *work in flight* that moves a
+model or proposal toward code under `src/`. See [[hyper-markdown]] for the card
+format this convention is written in.

@@ -9,7 +9,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.12.0"
+VERSION = "0.13.0"
 
 
 class Empty(Moniker):
@@ -122,6 +122,12 @@ class ClaudeConfig(Moniker):
         ...
 
 
+class GremIssues(Moniker):
+    @folder
+    def archive(self) -> Empty:
+        ...
+
+
 class Grem(Moniker):
     @file("config.yaml")
     def config(self):
@@ -135,6 +141,10 @@ class Grem(Moniker):
     def styles(self) -> Styles:
         ...
 
+    @folder
+    def issues(self) -> GremIssues:
+        ...
+
 
 class Proposals(Moniker):
     @file("README.md")
@@ -146,17 +156,37 @@ class Proposals(Moniker):
         ...
 
 
+class Wiki(Moniker):
+    @file("README.md")
+    def readme(self):
+        ...
+
+    @file("hyper-markdown.hmd")
+    def hyper_markdown(self):
+        ...
+
+    @file("kanban.hmd")
+    def kanban(self):
+        ...
+
+
+class Issues(Moniker):
+    @file("kanban.yaml")
+    def kanban(self):
+        ...
+
+
 class Documentation(Moniker):
     @folder
     def models(self) -> Models:
         ...
 
     @folder
-    def wiki(self) -> Empty:
+    def wiki(self) -> Wiki:
         ...
 
     @folder
-    def issues(self) -> Empty:
+    def issues(self) -> Issues:
         ...
 
     @folder

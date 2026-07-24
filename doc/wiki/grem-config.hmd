@@ -14,6 +14,7 @@ kind: layout
 schema: 1
 template: python
 template_version: 0.6.0
+grem_version: 0.1.0
 generated:
   directories: []
   files: []
@@ -24,12 +25,14 @@ agent_instructions:
     - CLAUDE.md
 ```
 
-`template` and `template_version` identify the stamped template.
-`generated` records the paths supplied by that template.
+`template` and `template_version` identify the stamped template, and
+`grem_version` records the grem CLI version that stamped or last upgraded the
+project. `generated` records the paths supplied by that template.
 `agent_instructions` selects the central instruction source and the
 tool-specific files that an LLM agent should keep aligned.
 
 The config contains no timestamps or machine-specific paths. Template
 `bootstrap.py` metadata and the template copy of `.grem/config.yaml` must agree.
 
-The [[grem-cli]] reads this file for `instructions`, `sync`, and `upgrade`.
+The [[grem-cli]] reads this file for `diff`, `sync`, `agent`, `new`, and
+`upgrade`, and `init` writes it (stamping `grem_version`).

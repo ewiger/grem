@@ -1,7 +1,7 @@
 kind: layout
 schema: 1
 template: python
-template_version: 0.12.0
+template_version: 0.13.0
 generated:
   directories:
     - .claude
@@ -9,6 +9,8 @@ generated:
     - .claude/skills/grem
     - .grem
     - .grem/harness
+    - .grem/issues
+    - .grem/issues/archive
     - .grem/styles
     - .grem/styles/doc
     - .grem/styles/doc/adr
@@ -43,8 +45,12 @@ generated:
     - AGENTS.md
     - CLAUDE.md
     - README.md
+    - doc/issues/kanban.yaml
     - doc/proposals/README.md
     - doc/proposals/TEMPLATE.md
+    - doc/wiki/README.md
+    - doc/wiki/hyper-markdown.hmd
+    - doc/wiki/kanban.hmd
     - pyproject.toml
 agent_instructions:
   central: .grem/harness/README.md

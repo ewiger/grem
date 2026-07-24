@@ -47,6 +47,8 @@ EXPECTED_PATHS = (
     Path(".grem/harness/instructions.md"),
     Path(".grem/harness/sync.md"),
     Path(".grem/harness/upgrade.md"),
+    Path(".grem/issues"),
+    Path(".grem/issues/archive"),
     Path(".grem/styles"),
     Path(".grem/styles/doc"),
     Path(".grem/styles/doc/adr"),
@@ -62,6 +64,7 @@ EXPECTED_PATHS = (
     Path("README.md"),
     Path("doc"),
     Path("doc/issues"),
+    Path("doc/issues/kanban.yaml"),
     Path("doc/memory"),
     Path("doc/models"),
     Path("doc/models/behavior"),
@@ -72,6 +75,9 @@ EXPECTED_PATHS = (
     Path("doc/proposals/README.md"),
     Path("doc/proposals/TEMPLATE.md"),
     Path("doc/wiki"),
+    Path("doc/wiki/README.md"),
+    Path("doc/wiki/hyper-markdown.hmd"),
+    Path("doc/wiki/kanban.hmd"),
     Path("pyproject.toml"),
     Path("src"),
     Path("src/myproject"),
@@ -117,7 +123,7 @@ def test_python_template_declares_semver_version() -> None:
     template = load_manifest(bundled_template())
 
     assert template.name == "python"
-    assert str(template.version) == "0.12.0"
+    assert str(template.version) == "0.13.0"
 
 
 def test_scaffold_does_not_execute_declaration_methods(tmp_path: Path) -> None:
