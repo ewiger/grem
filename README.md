@@ -26,9 +26,27 @@ build system or autonomous agent:
 - Template upgrades use a clean Git worktree so Git provides the diff, rollback,
   and merge surface.
 
+## Install
+
+```console
+pip install grem-ai
+```
+
+The distribution is published as [`grem-ai`](https://pypi.org/project/grem-ai/)
+(`grem` was already taken on PyPI); it installs the `grem` command. With
+[uv](https://docs.astral.sh/uv/), install it as a tool:
+
+```console
+uv tool install grem-ai
+```
+
 ## Quick start
 
-From this checkout:
+```console
+grem init ./myproject
+```
+
+Or from a checkout of this repo:
 
 ```console
 uv sync
