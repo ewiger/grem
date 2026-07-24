@@ -49,12 +49,19 @@ myproject/
       upgrade.md
     styles/
       doc/
+        adr/
+          prompt.md
+        hmd/
+          prompt.md
+        lenses/
+          prompt.md
         slides/
           prompt.md
   src/myproject/
   tests/
   doc/
     models/
+      requirements/
       data/
       domain/
       behavior/
@@ -63,6 +70,7 @@ myproject/
     memory/
     proposals/
       README.md
+      TEMPLATE.md
   AGENTS.md
   CLAUDE.md
   pyproject.toml
@@ -169,9 +177,9 @@ into a numbered folder of D2 "visual story" diagrams.
 
 `doc/` contains categories of truth with different lifetimes:
 
-- `doc/models/` declares the system through data, domain, and behavior lenses.
-  [len](https://github.com/ewiger/len) files such as L0, L1, and L2 live
-  directly here.
+- `doc/models/` declares the system through requirements, data, domain, and
+  behavior lenses. [len](https://github.com/ewiger/len) files such as L0, L1, and
+  L2 live directly here.
 - `doc/wiki/` contains cross-linked hyper-markdown (`.hmd`) cards.
 - `doc/issues/` tracks active work.
 - `doc/memory/` contains small real-time decisions and is loaded for every agent
@@ -247,7 +255,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.7.0"
+VERSION = "0.10.0"
 
 
 class Empty(Moniker):

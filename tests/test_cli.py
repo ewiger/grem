@@ -96,7 +96,7 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     result = runner.invoke(app, ["scaffold", "python", str(target)])
 
     assert result.exit_code == 0
-    assert "Scaffolded 29 entries" in result.stdout
+    assert "Scaffolded 37 entries" in result.stdout
     assert (target / "src" / "myproject").is_dir()
     assert (target / "doc" / "models" / "behavior").is_dir()
     assert (target / "doc" / "proposals" / "README.md").is_file()
@@ -261,6 +261,91 @@ def test_scaffolded_project_ships_slides_style(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "Style: `doc/slides`" in result.stdout
     assert "numbered D2" in result.stdout
+
+
+def test_scaffolded_project_ships_adr_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    assert scaffold_result.exit_code == 0
+    assert (
+        project / ".grem" / "styles" / "doc" / "adr" / "prompt.md"
+    ).is_file()
+    assert (project / "doc" / "proposals" / "TEMPLATE.md").is_file()
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "adr",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/adr`" in result.stdout
+    assert "ADR-style technical decision record" in result.stdout
+
+
+def test_scaffolded_project_ships_lenses_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    assert scaffold_result.exit_code == 0
+    assert (
+        project / ".grem" / "styles" / "doc" / "lenses" / "prompt.md"
+    ).is_file()
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "lenses",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/lenses`" in result.stdout
+    assert "L0/L1 model lens" in result.stdout
+
+
+def test_scaffolded_project_ships_hmd_style(tmp_path: Path) -> None:
+    project = tmp_path / "myproject"
+    scaffold_result = runner.invoke(app, ["scaffold", "python", str(project)])
+    assert scaffold_result.exit_code == 0
+    assert (
+        project / ".grem" / "styles" / "doc" / "hmd" / "prompt.md"
+    ).is_file()
+    (project / "doc" / "wiki" / "example.md").write_text("# Example\n")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "doc/wiki/example.md",
+            "--type",
+            "doc",
+            "--style",
+            "hmd",
+            "--project",
+            str(project),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Style: `doc/hmd`" in result.stdout
+    assert "hyper-markdown" in result.stdout
 
 
 def test_new_command_prints_shipped_slides_style() -> None:

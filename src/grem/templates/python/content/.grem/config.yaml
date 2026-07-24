@@ -1,13 +1,16 @@
 kind: layout
 schema: 1
 template: python
-template_version: 0.7.0
+template_version: 0.10.0
 generated:
   directories:
     - .grem
     - .grem/harness
     - .grem/styles
     - .grem/styles/doc
+    - .grem/styles/doc/adr
+    - .grem/styles/doc/hmd
+    - .grem/styles/doc/lenses
     - .grem/styles/doc/slides
     - doc
     - doc/issues
@@ -16,6 +19,7 @@ generated:
     - doc/models/behavior
     - doc/models/data
     - doc/models/domain
+    - doc/models/requirements
     - doc/proposals
     - doc/wiki
     - src
@@ -28,11 +32,15 @@ generated:
     - .grem/harness/instructions.md
     - .grem/harness/sync.md
     - .grem/harness/upgrade.md
+    - .grem/styles/doc/adr/prompt.md
+    - .grem/styles/doc/hmd/prompt.md
+    - .grem/styles/doc/lenses/prompt.md
     - .grem/styles/doc/slides/prompt.md
     - AGENTS.md
     - CLAUDE.md
     - README.md
     - doc/proposals/README.md
+    - doc/proposals/TEMPLATE.md
     - pyproject.toml
 agent_instructions:
   central: .grem/harness/README.md

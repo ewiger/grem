@@ -9,7 +9,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.7.0"
+VERSION = "0.10.0"
 
 
 class Empty(Moniker):
@@ -17,6 +17,10 @@ class Empty(Moniker):
 
 
 class Models(Moniker):
+    @folder
+    def requirements(self) -> Empty:
+        ...
+
     @folder
     def data(self) -> Empty:
         ...
@@ -52,6 +56,24 @@ class Harness(Moniker):
         ...
 
 
+class Adr(Moniker):
+    @file("prompt.md")
+    def prompt(self):
+        ...
+
+
+class Hmd(Moniker):
+    @file("prompt.md")
+    def prompt(self):
+        ...
+
+
+class Lenses(Moniker):
+    @file("prompt.md")
+    def prompt(self):
+        ...
+
+
 class Slides(Moniker):
     @file("prompt.md")
     def prompt(self):
@@ -59,6 +81,18 @@ class Slides(Moniker):
 
 
 class DocStyles(Moniker):
+    @folder
+    def adr(self) -> Adr:
+        ...
+
+    @folder
+    def hmd(self) -> Hmd:
+        ...
+
+    @folder
+    def lenses(self) -> Lenses:
+        ...
+
     @folder
     def slides(self) -> Slides:
         ...
@@ -87,6 +121,10 @@ class Grem(Moniker):
 class Proposals(Moniker):
     @file("README.md")
     def readme(self):
+        ...
+
+    @file("TEMPLATE.md")
+    def template(self):
         ...
 
 

@@ -2,7 +2,8 @@
 
 Treat `doc/` as a modular knowledge base:
 
-- `doc/models/` declares the system through data, domain, and behavior lenses.
+- `doc/models/` declares the system through requirements, data, domain, and
+  behavior lenses.
 - `doc/wiki/` contains hyper-markdown (`.hmd`) cards.
 - `doc/issues/` is active working memory.
 - `doc/proposals/` holds numbered ADR/RFC-style technical specifications.

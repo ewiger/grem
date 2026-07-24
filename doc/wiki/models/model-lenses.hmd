@@ -1,0 +1,94 @@
+# Model Lenses
+
+"Model lenses" is this project's working name for the artifacts that live under
+`doc/models/`. The term surfaced in these docs and was kept deliberately: a
+*lens* is what you get when you zoom in on one part of a system and write down,
+rigorously, how it is defined and how it works — the design, not the code.
+
+`doc/models/` is therefore a form of documentation, not implementation. It holds
+the blueprints an architect produces before and alongside the source: the
+declarations of *what* is being built and *how it must behave*, captured
+precisely enough to reason about, but stopping short of the [[implementation]]
+that lives under `src/`.
+
+## A lens is a rigorous blueprint
+
+Think of a lens as a [[blueprint]] in the strong, almost mathematical sense:
+
+- It **zooms in** on one thing — a data structure, a domain rule, an algorithm,
+  a protocol — rather than describing the whole system at once.
+- It is **well defined**: types, relations, invariants, pre/postconditions, and
+  step-by-step behavior are stated exactly, not sketched.
+- It is **implementation-free**: it says how something is *defined* and *works*,
+  not how one language or framework encodes it. The same lens admits many
+  implementations.
+
+"Blueprint" is arguably the plainer word; "lens" adds the two ideas that matter
+here — a chosen *focus* and a chosen *magnification*. A model is a stack of
+lenses, each trained on a different facet at the depth that facet needs.
+
+## A lens is a format, not a folder
+
+A lens is a *format* — a specification language of a particular kind, not a
+special location. There is no `doc/models/lenses/` folder, and nothing is
+required to be written in [[len]]. `doc/models/` is sorted by **facet** (data,
+domain, behavior), and within each facet you pick whichever notation pins the
+design down best:
+
+- **[[len]] notation** — the formal option, when a facet has stabilized enough
+  to state its types, relations, and contracts exactly.
+- **Hyper-markdown (`.hmd`) prose with diagrams** — natural language mixed with
+  diagrams that describe how the pieces link together. This is the
+  [[behavior-driven-development]] / model-driven way to write a lens: a working,
+  readable document rather than a formal grammar.
+
+That prose-and-diagrams form is the **L0** lens — *working natural-language
+documentation* — the loosest, most human end of the same spectrum [[len]]
+formalizes. Even at L0, a lens borrows its vocabulary from the *len*
+specification language: the same words for types, relations, contracts, and
+obligations carry across, so an informal card and a formal `.len` file describe
+the model in one shared language and can be tightened into each other later.
+
+## What counts as a lens
+
+Essentially every classical software-design artifact belongs here. The standing
+subfolders sort them by facet:
+
+- `doc/models/requirements/` — requirement blueprints: the constraints,
+  acceptance criteria, and stakeholder intent that everything else is designed to
+  satisfy. The most basic facet, referenced across the rest of the docs.
+- `doc/models/data/` — data blueprints: database schemas, entity-relationship
+  models, and [[data-modeling]] of the structures the system stores and moves.
+- `doc/models/domain/` — domain blueprints: [[domain-driven-design]] models,
+  bounded contexts, ontologies, and [[uml]] class/structure diagrams naming the
+  concepts and their relations.
+- `doc/models/behavior/` — behavioral blueprints: algorithms, state machines,
+  sequence and activity diagrams, and executable-intent specs from
+  [[test-driven-development]] and [[behavior-driven-development]].
+
+The list is open-ended by design: anything an architect draws or specifies to
+pin a system down — without writing its production code — is a candidate lens,
+in whatever format suits it. See [[models]] for the facets as an index and how
+they feed one another.
+
+## Design, not implementation
+
+The dividing line is grem's own: [[grem-cli]] stamps `doc/models/` as knowledge
+and `src/` as code, and never blurs the two. A lens captures the *technical*
+content — the algorithm, the contract, the shape of the data — at a level a
+reader could implement from in any language. The moment a lens starts embedding
+concrete production code, it has stopped being a lens.
+
+## Writing lenses down formally
+
+[[len]] is the experimental notation for taking a lens from L0 prose toward a
+machine-checkable specification, through increasing **levels of formalism**
+(L0 → L1 → L2). The rhyme is intentional: `len` is the notation, a *lens* is the
+artifact it produces. Its point in this project is practical — lenses are how we
+generate tests, so a tightened lens reads as [[test-driven-development]] and, at
+the formal end, as a way to produce proofs. The dedicated [[len]] card covers
+the language and its levels.
+
+The [`doc/lenses`](../../../.grem/styles/doc/lenses/prompt.md) documentation
+style turns a source doc — an issue, a wiki card, a rough note — into an L0/L1
+lens under the right facet. See [[grem-cli]] for how grem places `doc/models/`.

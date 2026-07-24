@@ -1,0 +1,74 @@
+# Models
+
+`doc/models/` is the project's design layer: the [[model-lenses|lenses]] an
+architect writes to declare *what* the system is and *how it must behave*, before
+and alongside the [[implementation]] under `src/`. This card is the index — it
+names every facet folder and says what belongs in each and how they feed one
+another.
+
+A model is not one document; it is a **stack of lenses**, each a focused,
+implementation-free [[blueprint]] of one facet at the depth that facet needs. See
+[[model-lenses]] for what a lens is (a format, not a folder) and [[len]] for the
+notation and its L0/L1 levels.
+
+## The facets
+
+`doc/models/` is sorted by facet, not by format. The standing subfolders, in the
+order design usually flows:
+
+- `doc/models/requirements/` — **what must be true** before anything is designed:
+  captured requirements, constraints, acceptance criteria, and the stakeholder
+  intent behind them. This is the most generic and most basic step of system
+  design; everything downstream references it.
+- `doc/models/domain/` — **the concepts**: [[domain-driven-design]] models,
+  bounded contexts, ontologies, and [[uml]] class/structure diagrams naming the
+  things the system reasons about and their relations.
+- `doc/models/data/` — **the structures**: database schemas,
+  entity-relationship models, and [[data-modeling]] of what the system stores and
+  moves.
+- `doc/models/behavior/` — **the behavior**: algorithms, state machines, sequence
+  and activity diagrams, and executable-intent specs from
+  [[test-driven-development]] and [[behavior-driven-development]].
+
+The set is open-ended, but these four cover the classical design artifacts.
+
+## Requirements come first
+
+Requirement capture is not paperwork — it is **system-design engineering**, and
+it is often the decisive point of whether a system flies in production. It
+answers the prior question to all the others: *what are we actually building, and
+what must hold for it to count as done?* Because it is so foundational, it earns
+its own facet: a requirement written once, in one place, can be **referenced
+across the rest of the documentation body** rather than restated and drifting.
+
+Well-captured requirements are what later
+[proposals](../../proposals/README.md) reason from: an ADR/RFC records a
+*decision*, and a decision is only as sound as the requirement it serves.
+A requirement lens is therefore the natural [`**Source**`](../../../.grem/styles/doc/adr/prompt.md)
+an ADR links back to — capture drives design, design drives the record.
+
+## How the facets relate
+
+The flow is a chain of lenses, each grounding the next:
+
+```text
+requirements  ->  domain + data  ->  behavior  ->  proposals (ADRs)  ->  src/ + tests/
+   what must         the concepts      how it        the decisions       the code and
+   be true           and structures    behaves       that satisfy them   its proofs
+```
+
+Each arrow is a link, not a copy: a domain lens cites the requirements it
+realizes, a behavior lens cites the domain and data it acts on, and an
+[[test-driven-development]] behavior lens is where obligations become tests. Keep
+the layers cross-linked so the design is discoverable in both directions.
+
+## Formats and styles
+
+Any facet may be written in whichever notation pins it down — formal [[len]], or
+hyper-markdown (`.hmd`) prose with diagrams (see [[model-lenses]]). Two shipped
+documentation styles help produce them: [`doc/lenses`](../../../.grem/styles/doc/lenses/prompt.md)
+turns a source into an L0/L1 lens under a facet, and
+[`doc/hmd`](../../../.grem/styles/doc/hmd/prompt.md) writes the generic wiki-card
+format used across `doc/wiki/`.
+
+See [[grem-cli]] for how grem stamps `doc/models/`.
