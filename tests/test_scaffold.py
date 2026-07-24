@@ -1,9 +1,37 @@
 from pathlib import Path
 
 import pytest
+import yaml
 
-from grem.scaffold import Moniker, ScaffoldError, file, folder, load_manifest, scaffold
+from grem.scaffold import (
+    Moniker,
+    ScaffoldError,
+    file,
+    folder,
+    load_manifest,
+    scaffold,
+    stamp_grem_version,
+)
 from grem.templates.python.bootstrap import ROOT
+
+
+def _project_with_config(tmp_path: Path, text: str) -> Path:
+    project = tmp_path / "project"
+    (project / ".grem").mkdir(parents=True)
+    (project / ".grem" / "config.yaml").write_text(text)
+    return project
+
+
+MINIMAL_CONFIG = (
+    "kind: layout\n"
+    "schema: 1\n"
+    "template: python\n"
+    "template_version: 0.6.0\n"
+    "agent_instructions:\n"
+    "  central: .grem/harness/README.md\n"
+    "  targets:\n"
+    "    - AGENTS.md\n"
+)
 
 
 EXPECTED_PATHS = (
@@ -121,6 +149,48 @@ def test_scaffold_rejects_nonempty_target(tmp_path: Path) -> None:
 
     with pytest.raises(ScaffoldError, match="not empty"):
         scaffold(Root, source, target)
+
+
+def test_stamp_grem_version_inserts_after_template_version(tmp_path: Path) -> None:
+    project = _project_with_config(tmp_path, MINIMAL_CONFIG)
+
+    stamp_grem_version(project, "1.2.3")
+
+    layout = yaml.safe_load((project / ".grem" / "config.yaml").read_text())
+    keys = list(layout)
+    assert layout["grem_version"] == "1.2.3"
+    assert keys[keys.index("template_version") + 1] == "grem_version"
+    assert layout["agent_instructions"]["central"] == ".grem/harness/README.md"
+
+
+def test_stamp_grem_version_replaces_prior_stamp(tmp_path: Path) -> None:
+    project = _project_with_config(tmp_path, MINIMAL_CONFIG)
+
+    stamp_grem_version(project, "1.0.0")
+    stamp_grem_version(project, "2.0.0")
+
+    text = (project / ".grem" / "config.yaml").read_text()
+    assert text.count("grem_version:") == 1
+    layout = yaml.safe_load(text)
+    assert layout["grem_version"] == "2.0.0"
+    keys = list(layout)
+    assert keys[keys.index("template_version") + 1] == "grem_version"
+
+
+def test_stamp_grem_version_appends_when_no_template_version(tmp_path: Path) -> None:
+    project = _project_with_config(tmp_path, "kind: layout\nschema: 1\n")
+
+    stamp_grem_version(project, "3.1.4")
+
+    layout = yaml.safe_load((project / ".grem" / "config.yaml").read_text())
+    assert layout["grem_version"] == "3.1.4"
+
+
+def test_stamp_grem_version_rejects_non_mapping(tmp_path: Path) -> None:
+    project = _project_with_config(tmp_path, "- just\n- a\n- list\n")
+
+    with pytest.raises(ScaffoldError, match="must be a mapping"):
+        stamp_grem_version(project, "1.0.0")
 
 
 def test_folder_requires_moniker_return_annotation(tmp_path: Path) -> None:

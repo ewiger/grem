@@ -60,6 +60,14 @@ def test_version_flag_reports_cli_version() -> None:
         assert result.stdout.strip() == f"grem {__version__}"
 
 
+def test_cli_version_matches_pyproject() -> None:
+    import tomllib
+
+    pyproject = Path(__file__).parents[1] / "pyproject.toml"
+    data = tomllib.loads(pyproject.read_text())
+    assert __version__ == data["project"]["version"]
+
+
 def test_scaffold_stamps_grem_cli_version(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
 
