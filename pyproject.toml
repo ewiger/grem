@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "grem"
+name = "grem-ai"
 version = "0.1.0"
 description = "Deterministic project bootstrap and control CLI for AI-assisted development: grem stamps structure, agents do the work."
 readme = "README.md"
