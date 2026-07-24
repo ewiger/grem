@@ -1,7 +1,7 @@
 kind: layout
 schema: 1
 template: python
-template_version: 0.13.0
+template_version: 0.14.0
 generated:
   directories:
     - .claude
@@ -28,7 +28,7 @@ generated:
     - doc/proposals
     - doc/wiki
     - src
-    - src/myproject
+    - src/{{ package_name }}
     - tests
   files:
     - .claude/skills/grem/SKILL.md
@@ -42,6 +42,7 @@ generated:
     - .grem/styles/doc/hmd/prompt.md
     - .grem/styles/doc/lenses/prompt.md
     - .grem/styles/doc/slides/prompt.md
+    - .gremignore
     - AGENTS.md
     - CLAUDE.md
     - README.md

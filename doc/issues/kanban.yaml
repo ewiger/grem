@@ -20,11 +20,11 @@ board:
   items:
     backlog: []
 
-    todo:
-      - id: "0001"
-        title: Incomplete init and upgrade
-        file: 0001-incomplete-init-and-upgrade.md
+    todo: []
 
     doing: []
 
-    done: []
+    done:
+      - id: "0001"
+        title: Incomplete init and upgrade
+        file: 0001-incomplete-init-and-upgrade.md

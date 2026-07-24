@@ -9,10 +9,21 @@ from grem.scaffold import (
     file,
     folder,
     load_manifest,
+    record_variables,
+    render,
     scaffold,
     stamp_grem_version,
 )
 from grem.templates.python.bootstrap import ROOT
+
+
+# The default variables `grem init` derives for a project folder named
+# ``myproject`` — keeps ``src/myproject`` stable across the substitution rework.
+VARIABLES = {
+    "project_name": "myproject",
+    "package_name": "myproject",
+    "proposal_prefix": "MYPROJECT",
+}
 
 
 def _project_with_config(tmp_path: Path, text: str) -> Path:
@@ -59,6 +70,7 @@ EXPECTED_PATHS = (
     Path(".grem/styles/doc/lenses/prompt.md"),
     Path(".grem/styles/doc/slides"),
     Path(".grem/styles/doc/slides/prompt.md"),
+    Path(".gremignore"),
     Path("AGENTS.md"),
     Path("CLAUDE.md"),
     Path("README.md"),
@@ -100,10 +112,10 @@ def bundled_template() -> Path:
     return bundled_content().parent
 
 
-def test_python_template_has_exact_tree_and_bytes(tmp_path: Path) -> None:
+def test_python_template_has_exact_tree_and_rendered_content(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
 
-    paths = scaffold(ROOT, bundled_content(), target)
+    paths = scaffold(ROOT, bundled_content(), target, VARIABLES)
 
     assert paths == EXPECTED_PATHS
     actual_paths = tuple(
@@ -113,17 +125,72 @@ def test_python_template_has_exact_tree_and_bytes(tmp_path: Path) -> None:
         )
     )
     assert actual_paths == EXPECTED_PATHS
+    # Every copied file equals its source rendered through the same variables;
+    # files without tokens are therefore still reproduced byte-for-byte.
     for source in bundled_content().rglob("*"):
         if source.is_file():
             relative = source.relative_to(bundled_content())
-            assert (target / relative).read_bytes() == source.read_bytes()
+            expected = render(source.read_text(), VARIABLES)
+            assert (target / relative).read_text() == expected
+    assert (target / "README.md").read_text() == "# myproject\n"
+    assert 'name = "myproject"' in (target / "pyproject.toml").read_text()
+    assert "MYPROJECT-0001" in (target / "doc" / "proposals" / "README.md").read_text()
+
+
+def test_scaffold_substitutes_path_components(tmp_path: Path) -> None:
+    target = tmp_path / "widget"
+    variables = {
+        "project_name": "Widget Co",
+        "package_name": "widget_co",
+        "proposal_prefix": "WIDGETCO",
+    }
+
+    scaffold(ROOT, bundled_content(), target, variables)
+
+    assert (target / "src" / "widget_co").is_dir()
+    assert not (target / "src" / "{{ package_name }}").exists()
+    assert (target / "README.md").read_text() == "# Widget Co\n"
 
 
 def test_python_template_declares_semver_version() -> None:
     template = load_manifest(bundled_template())
 
     assert template.name == "python"
-    assert str(template.version) == "0.13.0"
+    assert str(template.version) == "0.14.0"
+
+
+def test_render_replaces_known_tokens_and_preserves_unknown() -> None:
+    variables = {"package_name": "grem"}
+
+    assert render("src/{{ package_name }}", variables) == "src/grem"
+    assert render("{{{ package_name }}}", variables) == "grem"
+    assert render("{{package_name}}", variables) == "grem"
+    # Unknown tokens and stray braces survive untouched (no HTML escaping).
+    assert render("{{ other }} & <x>", variables) == "{{ other }} & <x>"
+
+
+def test_record_variables_inserts_after_grem_version(tmp_path: Path) -> None:
+    project = _project_with_config(tmp_path, MINIMAL_CONFIG)
+    stamp_grem_version(project, "1.2.3")
+
+    record_variables(project, {"project_name": "demo", "package_name": "demo"})
+
+    layout = yaml.safe_load((project / ".grem" / "config.yaml").read_text())
+    keys = list(layout)
+    assert keys[keys.index("grem_version") + 1] == "variables"
+    assert layout["variables"] == {"project_name": "demo", "package_name": "demo"}
+
+
+def test_record_variables_replaces_prior_block(tmp_path: Path) -> None:
+    project = _project_with_config(tmp_path, MINIMAL_CONFIG)
+
+    record_variables(project, {"project_name": "one"})
+    record_variables(project, {"project_name": "two"})
+
+    text = (project / ".grem" / "config.yaml").read_text()
+    assert text.count("variables:") == 1
+    layout = yaml.safe_load(text)
+    assert layout["variables"] == {"project_name": "two"}
 
 
 def test_scaffold_does_not_execute_declaration_methods(tmp_path: Path) -> None:

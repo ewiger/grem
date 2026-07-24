@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import importlib.util
 import inspect
+import re
 import shutil
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Literal, TypeVar, get_type_hints
@@ -16,6 +18,26 @@ import yaml
 
 class ScaffoldError(Exception):
     """Raised when a scaffold declaration or destination is invalid."""
+
+
+_TOKEN = re.compile(r"\{\{\{?\s*([A-Za-z_]\w*)\s*\}?\}\}")
+
+
+def render(text: str, variables: Mapping[str, str]) -> str:
+    """Substitute ``{{ name }}`` tokens using the Mustache interpolation subset.
+
+    Only variable interpolation is supported — no sections, partials, or
+    inheritance — and values are inserted raw: HTML escaping is deliberately
+    off because templates hold code and config, not markup. ``{{ name }}`` and
+    ``{{{ name }}}`` are both accepted. Unknown tokens are left untouched so
+    files that legitimately contain braces are never corrupted.
+    """
+
+    def replace(match: re.Match[str]) -> str:
+        value = variables.get(match.group(1))
+        return match.group(0) if value is None else value
+
+    return _TOKEN.sub(replace, text)
 
 
 class Moniker:
@@ -193,18 +215,72 @@ def _build_plan(
     return tuple(entries[path] for path in sorted(entries, key=lambda item: item.as_posix()))
 
 
+def _render_path(
+    path: PurePosixPath,
+    variables: Mapping[str, str] | None,
+) -> PurePosixPath:
+    """Substitute variables into each component of an output path."""
+
+    if not variables:
+        return path
+    parts: list[str] = []
+    for part in path.parts:
+        component = _relative_path(
+            render(part, variables),
+            label="substituted path component",
+            one_component=True,
+        )
+        parts.append(component.parts[0])
+    return PurePosixPath(*parts)
+
+
+def _write_file(
+    source: Path,
+    destination: Path,
+    variables: Mapping[str, str] | None,
+) -> None:
+    """Copy a template file, rendering variables into UTF-8 text content."""
+
+    if not variables:
+        shutil.copyfile(source, destination)
+        return
+    raw = source.read_bytes()
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        destination.write_bytes(raw)
+        return
+    destination.write_bytes(render(text, variables).encode("utf-8"))
+
+
 def scaffold(
     root: type[Moniker],
     source_root: Path,
     target: Path,
+    variables: Mapping[str, str] | None = None,
 ) -> tuple[Path, ...]:
-    """Materialize a Moniker tree and return its relative output paths."""
+    """Materialize a Moniker tree and return its relative output paths.
+
+    When ``variables`` is given, ``{{ name }}`` tokens in both path components
+    and UTF-8 file contents are substituted (see :func:`render`); otherwise the
+    tree is copied byte-for-byte.
+    """
 
     source_root = source_root.resolve()
     if not source_root.is_dir():
         raise ScaffoldError(f"template content directory does not exist: {source_root}")
 
     plan = _build_plan(root, source_root)
+
+    rendered: list[tuple[PurePosixPath, _PlannedEntry]] = []
+    seen: set[PurePosixPath] = set()
+    for entry in plan:
+        output_path = _render_path(entry.path, variables)
+        if output_path in seen:
+            raise ScaffoldError(f"duplicate output path after substitution: {output_path}")
+        seen.add(output_path)
+        rendered.append((output_path, entry))
+    rendered.sort(key=lambda item: item[0].as_posix())
 
     if target.exists() and not target.is_dir():
         raise ScaffoldError(f"target is not a directory: {target}")
@@ -216,9 +292,9 @@ def scaffold(
         raise ScaffoldError(f"target is already a grem project: {target}")
 
     conflicts = sorted(
-        entry.path.as_posix()
-        for entry in plan
-        if entry.kind == "file" and target.joinpath(*entry.path.parts).exists()
+        output_path.as_posix()
+        for output_path, entry in rendered
+        if entry.kind == "file" and target.joinpath(*output_path.parts).exists()
     )
     if conflicts:
         raise ScaffoldError(
@@ -227,16 +303,16 @@ def scaffold(
         )
 
     target.mkdir(parents=True, exist_ok=True)
-    for entry in plan:
-        destination = target.joinpath(*entry.path.parts)
+    for output_path, entry in rendered:
+        destination = target.joinpath(*output_path.parts)
         if entry.kind == "folder":
             destination.mkdir(parents=True, exist_ok=True)
         else:
             destination.parent.mkdir(parents=True, exist_ok=True)
             assert entry.source is not None
-            shutil.copyfile(entry.source, destination)
+            _write_file(entry.source, destination, variables)
 
-    return tuple(Path(*entry.path.parts) for entry in plan)
+    return tuple(Path(*output_path.parts) for output_path, _ in rendered)
 
 
 def load_manifest(template: Path) -> Template:
@@ -301,11 +377,15 @@ def load_manifest(template: Path) -> Template:
     )
 
 
-def scaffold_template(template: Path, target: Path) -> tuple[Path, ...]:
+def scaffold_template(
+    template: Path,
+    target: Path,
+    variables: Mapping[str, str] | None = None,
+) -> tuple[Path, ...]:
     """Load and scaffold a template directory."""
 
     loaded = load_manifest(template)
-    return scaffold(loaded.root, loaded.content, target)
+    return scaffold(loaded.root, loaded.content, target, variables)
 
 
 class _LayoutDumper(yaml.SafeDumper):
@@ -342,6 +422,48 @@ def stamp_grem_version(project: Path, version: str) -> None:
     config_path.write_text(
         yaml.dump(
             stamped,
+            Dumper=_LayoutDumper,
+            sort_keys=False,
+            default_flow_style=False,
+            indent=2,
+        )
+    )
+
+
+def record_variables(project: Path, variables: Mapping[str, str]) -> None:
+    """Record the resolved template variables in a project's config.yaml.
+
+    The ``variables`` mapping is written right after ``grem_version`` (or
+    ``template_version`` when the project has not been stamped yet) and replaces
+    any prior block, so re-running keeps a single, up-to-date record. These
+    values are project-owned: ``grem upgrade`` reads them back to re-render the
+    template deterministically.
+    """
+
+    config_path = project / ".grem" / "config.yaml"
+    try:
+        layout = yaml.safe_load(config_path.read_text())
+    except yaml.YAMLError as error:
+        raise ScaffoldError(f"invalid .grem/config.yaml in {project}") from error
+    if not isinstance(layout, dict):
+        raise ScaffoldError(f".grem/config.yaml must be a mapping in {project}")
+
+    anchor = "grem_version" if "grem_version" in layout else "template_version"
+    updated: dict = {}
+    inserted = False
+    for key, value in layout.items():
+        if key == "variables":
+            continue
+        updated[key] = value
+        if key == anchor:
+            updated["variables"] = dict(variables)
+            inserted = True
+    if not inserted:
+        updated["variables"] = dict(variables)
+
+    config_path.write_text(
+        yaml.dump(
+            updated,
             Dumper=_LayoutDumper,
             sort_keys=False,
             default_flow_style=False,

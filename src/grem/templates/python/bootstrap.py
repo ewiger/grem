@@ -9,7 +9,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.13.0"
+VERSION = "0.14.0"
 
 
 class Empty(Moniker):
@@ -198,8 +198,8 @@ class Documentation(Moniker):
         ...
 
 class Source(Moniker):
-    @folder
-    def myproject(self) -> Empty:
+    @folder("{{ package_name }}")
+    def package(self) -> Empty:
         ...
 
 
@@ -222,6 +222,10 @@ class Project(Moniker):
 
     @folder
     def doc(self) -> Documentation:
+        ...
+
+    @file(".gremignore")
+    def gremignore(self):
         ...
 
     @file("CLAUDE.md")

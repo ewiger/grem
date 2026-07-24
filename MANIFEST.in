@@ -1,1 +1,2 @@
+recursive-include src/grem/templates .gremignore
 global-exclude *.py[cod]

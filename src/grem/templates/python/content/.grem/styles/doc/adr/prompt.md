@@ -31,7 +31,7 @@ precise enough that a peer could implement from it without you present.
 ## Placement and registry
 
 - Start from the skeleton at `doc/proposals/TEMPLATE.md`: copy it to
-  `doc/proposals/<PREFIX>-NNNN/README.md` (one folder per proposal, named for its
+  `doc/proposals/{{ proposal_prefix }}-NNNN/README.md` (one folder per proposal, named for its
   stable ID) and delete its guidance comments as you fill each section.
 - Reserve the number first: add or update the row in `doc/proposals/README.md`
   (`ID | Status | Title`) before writing the record, and keep that row's Status
@@ -40,7 +40,7 @@ precise enough that a peer could implement from it without you present.
   than summarizing them.
 
 ## Front matter (exact)
-- H1 title: `# <PREFIX>-NNNN: <Title>` (short, declarative — the change, not a pitch).
+- H1 title: `# {{ proposal_prefix }}-NNNN: <Title>` (short, declarative — the change, not a pitch).
 - `**Status**: drafted | accepted | rejected | withdrawn`
 - `**Created**: YYYY-MM-DD`
 - `**Source**`: link to the document this record was derived from.

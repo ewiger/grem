@@ -1,7 +1,20 @@
 # 0001 — Incomplete init and upgrade
 
-- **Status:** Todo
+- **Status:** Done
 - **Discovered:** 2026-07-24, while dogfooding `grem upgrade .` on the grem repo.
+- **Resolved:** 2026-07-24. All three gaps closed in the `python` template
+  (bumped to `0.14.0`) and the CLI:
+  - **Gap 1** — a per-template root `.gremignore` marks project-owned paths;
+    `grem upgrade` overlays only the template-owned layer and skips them
+    (`.gremignore` itself is always protected). `CLAUDE.md`/`AGENTS.md` are
+    template-owned and refreshed — custom rules live under `doc/memory/`.
+  - **Gap 2** — Mustache interpolation (`{{ project_name }}`) substitutes real
+    parameters into paths and file contents. `grem init` resolves the project
+    name (`--name` or the target folder, prompting when interactive) and records
+    `variables:` in `.grem/config.yaml`; `src/myproject` → `src/<package_name>`.
+  - **Gap 3** — the proposal ID prefix is the derived `proposal_prefix` variable
+    (uppercased short form of the name), propagated to the proposals index and
+    template.
 
 ## Summary
 

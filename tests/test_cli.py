@@ -56,8 +56,12 @@ def newer_template(tmp_path: Path) -> Path:
             f"template_version: {NEXT_VERSION}",
         )
     )
+    # Change a template-owned file (must be refreshed) and a project-owned file
+    # (must be protected) so the upgrade can be checked from both sides.
+    sync = target_template / "content" / ".grem" / "harness" / "sync.md"
+    sync.write_text(sync.read_text() + "\nUPGRADED-TEMPLATE-MARKER\n")
     readme = target_template / "content" / "README.md"
-    readme.write_text("# myproject\n\nUpgraded template.\n")
+    readme.write_text("# {{ project_name }}\n\nUpgraded template.\n")
     return target_template
 
 
@@ -96,7 +100,7 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     result = runner.invoke(app, ["init", str(target)])
 
     assert result.exit_code == 0
-    assert "Scaffolded 47 entries" in result.stdout
+    assert "Scaffolded 48 entries" in result.stdout
     assert (target / "src" / "myproject").is_dir()
     assert (target / "doc" / "models" / "behavior").is_dir()
     assert (target / "doc" / "proposals" / "README.md").is_file()
@@ -108,6 +112,33 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     assert "Read and follow `CLAUDE.md`" in (target / "AGENTS.md").read_text()
     assert (target / ".grem" / "config.yaml").is_file()
     assert (target / "pyproject.toml").is_file()
+
+
+def test_init_name_option_substitutes_variables(tmp_path: Path) -> None:
+    target = tmp_path / "checkout"
+
+    result = runner.invoke(app, ["init", str(target), "--name", "Demo App"])
+
+    assert result.exit_code == 0
+    assert "as 'Demo App'" in result.stdout
+    assert (target / "src" / "demo_app").is_dir()
+    assert (target / "README.md").read_text() == "# Demo App\n"
+    assert 'name = "demo_app"' in (target / "pyproject.toml").read_text()
+    assert "DEMOAPP-0001" in (target / "doc" / "proposals" / "README.md").read_text()
+    config = (target / ".grem" / "config.yaml").read_text()
+    assert "project_name: Demo App" in config
+    assert "package_name: demo_app" in config
+    assert "proposal_prefix: DEMOAPP" in config
+
+
+def test_init_defaults_name_to_target_folder(tmp_path: Path) -> None:
+    target = tmp_path / "coolthing"
+
+    result = runner.invoke(app, ["init", str(target)])
+
+    assert result.exit_code == 0
+    assert (target / "src" / "coolthing").is_dir()
+    assert (target / "README.md").read_text() == "# coolthing\n"
 
 
 def test_sync_command_prints_project_prompt(tmp_path: Path) -> None:
@@ -418,13 +449,21 @@ def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> No
     assert f"Current version: `{CURRENT_VERSION}`" in result.stdout
     assert f"Target version: `{NEXT_VERSION}`" in result.stdout
     assert "Files overwritten:" in result.stdout
+    assert "Files skipped (project-owned):" in result.stdout
     assert "resulting unstaged Git diff" in result.stdout
-    assert project.joinpath("README.md").read_text() == (
-        "# myproject\n\nUpgraded template.\n"
-    )
+    # Project-owned files are protected: README/pyproject keep their init values,
+    # not the newer template's content.
+    assert project.joinpath("README.md").read_text() == "# myproject\n"
+    assert 'name = "myproject"' in project.joinpath("pyproject.toml").read_text()
+    # Template-owned files are refreshed.
+    assert "UPGRADED-TEMPLATE-MARKER" in (
+        project / ".grem" / "harness" / "sync.md"
+    ).read_text()
     upgraded_config = (project / ".grem" / "config.yaml").read_text()
     assert f"template_version: {NEXT_VERSION}" in upgraded_config
     assert f"grem_version: {__version__}" in upgraded_config
+    # The resolved variables survive the upgrade so re-rendering stays stable.
+    assert "project_name: myproject" in upgraded_config
     status = subprocess.run(
         ["git", "status", "--short"],
         cwd=project,
@@ -432,8 +471,9 @@ def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> No
         capture_output=True,
         text=True,
     ).stdout
-    assert "README.md" in status
+    assert ".grem/harness/sync.md" in status
     assert ".grem/config.yaml" in status
+    assert "README.md" not in status
 
 
 def test_interactive_upgrade_can_cancel_before_overlay(tmp_path: Path) -> None:

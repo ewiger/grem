@@ -47,6 +47,7 @@ where = ["src"]
 grem = [
     "templates/*/content/*",
     "templates/*/content/**/*",
+    "templates/*/content/.gremignore",
     "templates/*/content/.grem/*",
     "templates/*/content/.grem/**/*",
     "templates/*/content/.claude/*",

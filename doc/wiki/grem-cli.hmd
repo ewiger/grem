@@ -5,12 +5,15 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
 
 ## Commands
 
-- `grem init [TARGET]` scaffolds the declared folders and copies the declared
+- `grem init [TARGET]` scaffolds the declared folders and renders the declared
   template files into the target. Like `git init` it defaults to the bundled
   `python` template (override with `--template`/`-t`) and to the current
-  directory. It writes alongside unrelated files but refuses to overwrite
-  existing ones, and refuses to run when the target already holds a `.grem`
-  folder.
+  directory, and names the project after the target folder — prompting when
+  interactive, or take `--name`/`-n`. The name drives the template
+  [[grem-config|variables]] (package name, proposal prefix) that are substituted
+  during scaffolding and recorded in the config. It writes alongside unrelated
+  files but refuses to overwrite existing ones, and refuses to run when the
+  target already holds a `.grem` folder.
 - `grem agent [PROJECT]` reads [[grem-config]] and prints the prompt for
   aligning configured agent instruction files. `grem instructions` remains as a
   hidden alias.
@@ -21,9 +24,12 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
   comparison prompt for a numbered list of inconsistencies.
 - `grem sync A B` validates the same kinds of scopes and prints the full plan →
   implement → test → document → diff loop.
-- `grem upgrade [PROJECT]` requires a clean Git worktree, overlays a newer
-  template, and prints the target template's prompt for reviewing and merging
-  the resulting unstaged diff. `--interactive` confirms before writing.
+- `grem upgrade [PROJECT]` requires a clean Git worktree, re-renders the newer
+  template with the project's recorded variables, overlays only the
+  template-owned control layer — every path matched by the project's
+  [[templates|`.gremignore`]] is left untouched — and prints the target
+  template's prompt for reviewing and merging the resulting unstaged diff.
+  `--interactive` confirms before writing.
 
 `init` and `upgrade` write project files. `diff`, `sync`, `agent`, and `new`
 only produce text for a user to copy into an LLM agent such as Claude or Codex.
