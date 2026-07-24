@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "grem"
 version = "0.1.0"
-description = "A deterministic scaffolding CLI."
+description = "Deterministic project bootstrap and control CLI for AI-assisted development: grem stamps structure, agents do the work."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
