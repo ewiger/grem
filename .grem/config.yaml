@@ -2,6 +2,7 @@ kind: layout
 schema: 1
 template: python
 template_version: 0.6.0
+grem_version: 0.1.0
 generated:
   directories:
     - .grem

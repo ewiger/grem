@@ -292,3 +292,45 @@ def scaffold_template(template: Path, target: Path) -> tuple[Path, ...]:
 
     loaded = load_manifest(template)
     return scaffold(loaded.root, loaded.content, target)
+
+
+class _LayoutDumper(yaml.SafeDumper):
+    """Dump config.yaml with block sequences indented under their key."""
+
+    def increase_indent(self, flow: bool = False, indentless: bool = False) -> Any:
+        return super().increase_indent(flow, indentless=False)
+
+
+def stamp_grem_version(project: Path, version: str) -> None:
+    """Record in a project's config.yaml which grem CLI version produced it.
+
+    The value is written right after ``template_version`` and replaces any
+    prior stamp, so re-running upgrade keeps a single, up-to-date entry.
+    """
+
+    config_path = project / ".grem" / "config.yaml"
+    try:
+        layout = yaml.safe_load(config_path.read_text())
+    except yaml.YAMLError as error:
+        raise ScaffoldError(f"invalid .grem/config.yaml in {project}") from error
+    if not isinstance(layout, dict):
+        raise ScaffoldError(f".grem/config.yaml must be a mapping in {project}")
+
+    stamped: dict = {}
+    for key, value in layout.items():
+        if key == "grem_version":
+            continue
+        stamped[key] = value
+        if key == "template_version":
+            stamped["grem_version"] = version
+    stamped.setdefault("grem_version", version)
+
+    config_path.write_text(
+        yaml.dump(
+            stamped,
+            Dumper=_LayoutDumper,
+            sort_keys=False,
+            default_flow_style=False,
+            indent=2,
+        )
+    )

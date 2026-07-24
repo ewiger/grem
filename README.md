@@ -2,10 +2,7 @@
 
 **Grem stamps structure. Agents do the work.**
 
-grem is a deterministic project bootstrap and control CLI for AI-assisted
-development. It stamps a versioned project layout, keeps agent workflows under
-`.grem/`, and turns those workflows into prompts for agents such as Claude and
-Codex.
+grem (short for "gremlin") is a deterministic project bootstrap and control CLI for AI-assisted development. It stamps a versioned project layout, keeps agent workflows under `.grem/`, and turns those workflows into prompts for agents such as Claude and Codex.
 
 The tool handles predictable mechanics. Templates define the knowledge model
 and agent behavior. The generated project's agents perform the semantic work.

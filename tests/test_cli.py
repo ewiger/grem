@@ -4,6 +4,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
+from grem import __version__
 from grem.cli import app
 
 
@@ -50,6 +51,24 @@ def newer_template(tmp_path: Path) -> Path:
     readme = target_template / "content" / "README.md"
     readme.write_text("# myproject\n\nUpgraded template.\n")
     return target_template
+
+
+def test_version_flag_reports_cli_version() -> None:
+    for flag in ("--version", "-v"):
+        result = runner.invoke(app, [flag])
+        assert result.exit_code == 0
+        assert result.stdout.strip() == f"grem {__version__}"
+
+
+def test_scaffold_stamps_grem_cli_version(tmp_path: Path) -> None:
+    target = tmp_path / "myproject"
+
+    result = runner.invoke(app, ["scaffold", "python", str(target)])
+
+    assert result.exit_code == 0
+    config = (target / ".grem" / "config.yaml").read_text()
+    assert f"grem_version: {__version__}" in config
+    assert f"template_version: 0.6.0\ngrem_version: {__version__}\n" in config
 
 
 def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
@@ -140,9 +159,9 @@ def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> No
     assert project.joinpath("README.md").read_text() == (
         "# myproject\n\nUpgraded template.\n"
     )
-    assert "template_version: 0.7.0" in (
-        project / ".grem" / "config.yaml"
-    ).read_text()
+    upgraded_config = (project / ".grem" / "config.yaml").read_text()
+    assert "template_version: 0.7.0" in upgraded_config
+    assert f"grem_version: {__version__}" in upgraded_config
     status = subprocess.run(
         ["git", "status", "--short"],
         cwd=project,

@@ -10,11 +10,13 @@ import semver
 import typer
 import yaml
 
+from grem import __version__
 from grem.scaffold import (
     ScaffoldError,
     load_manifest,
     scaffold as materialize,
     scaffold_template,
+    stamp_grem_version,
 )
 from grem.upgrade import overlay_reference, require_clean_git_worktree
 
@@ -25,8 +27,25 @@ app = typer.Typer(
 )
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"grem {__version__}")
+        raise typer.Exit()
+
+
 @app.callback()
-def main() -> None:
+def main(
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            "-v",
+            help="Show the grem CLI version and exit.",
+            is_eager=True,
+            callback=_version_callback,
+        ),
+    ] = False,
+) -> None:
     """Stamp projects from declarative templates."""
 
 
@@ -97,6 +116,7 @@ def scaffold(
     try:
         with _template_directory(template) as template_path:
             entries = scaffold_template(template_path, target)
+        stamp_grem_version(target, __version__)
     except ScaffoldError as error:
         typer.echo(f"error: {error}", err=True)
         raise typer.Exit(code=1) from error
@@ -300,6 +320,7 @@ def upgrade(
                 reference = Path(temporary) / "reference"
                 materialize(available.root, available.content, reference)
                 result = overlay_reference(reference, project)
+            stamp_grem_version(project, __version__)
     except ScaffoldError as error:
         typer.echo(f"error: {error}", err=True)
         raise typer.Exit(code=1) from error
