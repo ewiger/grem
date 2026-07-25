@@ -1,11 +1,21 @@
 # grem 👹
 
+[![PyPI](https://img.shields.io/pypi/v/grem-ai.svg)](https://pypi.org/project/grem-ai/)
+[![Python versions](https://img.shields.io/pypi/pyversions/grem-ai.svg)](https://pypi.org/project/grem-ai/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ewiger/grem/blob/main/LICENSE)
+[![CI](https://github.com/ewiger/grem/actions/workflows/ci.yml/badge.svg)](https://github.com/ewiger/grem/actions/workflows/ci.yml)
+
 **Grem stamps structure. Agents do the work.**
 
 grem (short for "gremlin") is a deterministic project bootstrap and control CLI for AI-assisted development. It stamps a versioned project layout, keeps agent workflows under `.grem/`, and turns those workflows into prompts for agents such as Claude and Codex.
 
 The tool handles predictable mechanics. Templates define the knowledge model
 and agent behavior. The generated project's agents perform the semantic work.
+
+Watch an empty directory become a stamped project with ready-to-paste agent
+prompts in under a minute — `grem init`, then `grem agent` and `grem diff`:
+
+![grem quick start: init a project, then print the agent-alignment and semantic-diff prompts](https://raw.githubusercontent.com/ewiger/grem/main/.github/assets/demo.gif)
 
 ## Vision
 
