@@ -1,95 +1,160 @@
-# Turn a prose doc into a numbered D2 "visual story"
+# Turn a prose design document into a numbered D2 visual story
 
-Apply this documentation style to the source document named in the prompt
-header. Read that document in full first.
+Apply this style to the source document identified in the task. Read the source
+document in full before planning or editing anything. Follow its terminology and
+level of abstraction; do not impose a database, deployment, or organizational
+model that the source does not contain.
 
-**Goal:** Take the long-form Markdown doc — one that explains a system's design
-or lifecycle — and produce a companion folder of small, numbered diagrams (using
-D2) that retell it as a sequence of slides: one idea per diagram, read top to
-bottom like a deck.
+## Goal
 
-## Philosophy
+Create a companion folder of small, numbered D2 diagrams that retell a long-form
+Markdown document as a coherent visual sequence. The result should read from top
+to bottom like a deck:
 
-- **One idea per diagram, not one diagram per doc.** Never cram a whole system
-  into a single canvas. Split the source doc's sections into the smallest visual
-  units that each carry one idea, zoomed to the altitude that idea needs (a
-  single stage, a single before/after comparison, one worked example).
-- **The diagram folder is a compact companion, not a replacement.** The README
-  that binds the diagrams together reads as the short version; the original prose
-  doc remains the long version. Every diagram set links back to its source doc,
-  and the source doc links forward to the diagram set — discoverable from both
-  directions.
-- **Source vs. generated output is a hard split.** The `.d2` files (and the
-  README's narrative) are the only hand-edited sources. The rendered
-  `.svg`/`.png` are build artifacts — but they are still committed, so the
-  diagrams render in plain Markdown viewers (GitHub, IDE preview) without anyone
-  needing the D2 toolchain installed. Any diff that touches a `.d2` file but not
-  its rendered twin is a sign a build step was skipped.
+- one claim, relationship, or transition per diagram;
+- a short narrative passage before each rendered image;
+- enough context for each diagram to make sense on its own;
+- a clear path back to the detailed source document.
 
-## File and folder conventions
+The visual story is a concise companion, not a substitute for the source.
 
-- One subfolder per source doc, named after it.
-- Files inside: `NN-short-slug.d2` — a numeric prefix fixes reading order in a
-  plain directory listing (`01-vision.d2`, `02-mechanism.d2`, …). Insert a new
-  idea in the middle by renumbering the tail, not by using decimals or letters.
-- A single-idea diagram that is naturally two beats (e.g. "problem, then
-  solution") may be split into `NN-slug_1.d2` / `NN-slug_2.d2` rather than forced
-  into one crowded canvas.
-- A thin `build.sh` per folder that just delegates to one shared build script —
-  so every folder is independently buildable, but there is exactly one real
-  rendering implementation to maintain.
-- A `README.md` per folder that alternates narrative and image: a short
-  paragraph (a tightened excerpt or summary of the matching section in the
-  source doc), then the diagram image, repeated per diagram in numbered order.
-  Close with a "Related documentation" section linking back to the source doc and
-  any doc the diagrams reference by name.
+## Core principles
+
+- **One idea per diagram.** Do not compress an entire architecture or lifecycle
+  into one canvas. Split it into the smallest useful visual units: one state
+  transition, one interaction, one comparison, one invariant, or one worked
+  example.
+- **Let the content choose the visual form.** Use a flow for a process, a
+  before/after layout for a state change, parallel lanes for concurrent actors, a
+  hierarchy for containment, and a small table-like arrangement for exact
+  comparisons. Do not make every topic look like a data model.
+- **Use the source document's language.** Preserve the names of actors,
+  components, states, operations, and boundaries. Introduce a new visual metaphor
+  only when it clarifies the source, and explain it in the diagram note.
+- **Show meaning, not decoration.** Every node and edge must support the slide's
+  single idea. Omit implementation detail that does not affect that idea.
+- **Make important distinctions visible.** Encode differences such as durable
+  versus temporary, local versus shared, success versus failure, or current
+  versus proposed behavior consistently across the set.
+- **Keep claims faithful.** Do not turn an analogy into an implementation claim,
+  infer behavior that the source leaves open, or present a planned feature as
+  implemented. Mark uncertainty, limitations, and current/future boundaries
+  explicitly.
+- **Keep source and generated output separate.** The `.d2` files and README
+  narrative are hand-edited sources. The rendered `.svg` and `.png` files are
+  generated artifacts, but remain committed so the diagrams work in plain
+  Markdown viewers. A `.d2` change without updated rendered counterparts is
+  incomplete.
+
+## Deliverables and layout
+
+Create one subfolder for each source document, named after the source document.
+It contains:
+
+- `NN-short-slug.d2` files, with two-digit numeric prefixes fixing the reading
+  order in directory listings (`01-overview.d2`, `02-state-change.d2`, and so
+  on);
+- matching `NN-short-slug.svg` and `NN-short-slug.png` files;
+- a `README.md` that presents the story in the same numbered order;
+- a thin `build.sh` that delegates to the repository's shared rendering script.
+
+If a single idea naturally has two beats, such as problem then resolution, it
+may use `NN-slug_1.d2` and `NN-slug_2.d2`. Prefer that over crowding both beats
+onto one canvas. When inserting an idea, renumber the following files rather
+than introducing decimal or letter suffixes.
+
+The README should:
+
+1. open with the purpose of the visual story and link to the full source;
+2. alternate a short explanatory paragraph and its diagram image;
+3. preserve the source's narrative order unless a different order materially
+   improves understanding;
+4. end with a **Related documentation** section linking to the source and to any
+   documents referenced by name in the story.
+
+Use relative links that work from the companion folder.
+Add a reciprocal link from the source document to the visual story so readers
+can discover either version first.
+
+## Planning the visual story
+
+Before authoring D2:
+
+1. Outline the source document by section.
+2. For each section, identify the one relationship, transition, comparison, or
+   invariant it is trying to establish.
+3. Decide whether that idea is best explained visually. Combine or omit sections
+   that would produce only decorative diagrams; split sections that contain
+   multiple independent ideas.
+4. Choose a visual form appropriate to the idea.
+5. Arrange the slides into a narrative arc, typically:
+   motivation or boundary → mental model → mechanism → lifecycle or interactions
+   → failure and recovery paths → worked example → compact recap.
+6. Check the outline against the source for missing qualifications, open
+   questions, and implemented-versus-proposed distinctions.
+
+When two systems or actors evolve independently, use parallel lanes. When their
+comparison is the actual point, place them together on one slide with aligned
+states or steps. Use a worked example only when concrete names or values make the
+mechanism easier to follow.
 
 ## D2 authoring conventions
 
-- Each `.d2` file defines its own local classes (e.g. a `block` class for
-  shape/color reuse) rather than importing a shared palette — D2 has no
-  cross-file import in this style, and each diagram should be readable
-  standalone.
-- Establish a consistent but per-diagram color semantics, e.g.: one color for
-  "in the group / allowed" actors, another for "excluded / denied" actors or
-  failure paths, a distinct fill for role/group nodes (often drawn as a cylinder
-  shape), a neutral grey for schema/data objects (often a "page" shape), a green
-  stroke for "granted" edges, a dashed red stroke for "denied" edges.
-- Bookend most diagrams with a `title:` text node (`near: top-center`, bold,
-  larger font) and a short explanatory `note:` text node (`near: bottom-center`,
-  smaller font) — so each diagram is self-explanatory even lifted out of
-  context.
-- Group related nodes into named containers (e.g. "Lane A", "Users", "Groups",
-  "Schema Objects") when a diagram has categorically distinct clusters of
-  elements — this reads better than a flat node soup and mirrors how the prose
-  doc names those categories.
+- Make every `.d2` file standalone. Define its classes locally rather than
+  relying on an implicit shared palette.
+- Use shapes according to their meaning in the current domain. For example:
+  rectangles for components or states, containers for boundaries or ownership,
+  documents for messages or artifacts, and cylinders only when persistent
+  storage is genuinely relevant. These are defaults, not a mandatory schema.
+- Use a small, consistent visual vocabulary across the story. Prefer semantic
+  roles such as:
+  - neutral for context and unchanged elements;
+  - one accent for the active path or current focus;
+  - green for successful or accepted outcomes;
+  - red for failure, rejection, or destructive effects;
+  - dashed outlines or edges for temporary, optional, inferred, or planned
+    elements.
+- Do not rely on color alone. Pair color with labels, line styles, icons, or
+  spatial grouping so the meaning survives grayscale rendering and supports
+  color-blind readers.
+- Label edges with actions or relationships when direction alone is ambiguous.
+  Prefer domain verbs from the source over generic labels such as "uses" or
+  "handles."
+- Group nodes only when the boundary itself matters. Name containers after the
+  source's concepts rather than generic categories.
+- Give most diagrams a `title` near the top center and a concise explanatory
+  `note` near the bottom center. The title states the slide's claim; the note
+  supplies the key qualification or takeaway.
+- Keep labels short and move explanation into the README. If a node needs a
+  paragraph, the slide is probably too broad.
+- Keep layouts readable at normal Markdown width. Split a diagram when labels,
+  crossings, or nested containers make the main path hard to scan.
 
-## Decomposition method (how to break prose into slides)
+## Rendering and regeneration
 
-- Read the source doc's own section headers — they are usually already the right
-  granularity for "one diagram per idea" (a Vision section, a Stage, a
-  comparison, a worked example, a summary).
-- For each section, ask: what is the single relationship or transition this
-  section is arguing for? Draw only that — the actors, the objects they act on,
-  and the edges that represent the mechanism (grants, ownership, membership, data
-  flow).
-- Sequence the diagrams so the whole set has a narrative arc: usually
-  vision/motivation → underlying mechanism → stages of the lifecycle in order → a
-  worked example with concrete names → a summary diagram that recaps the whole
-  arc in one compressed view.
-- When a stage in the story naturally has multiple lanes or actors happening
-  concurrently (e.g. two systems evolving independently, or upstream setup vs.
-  downstream consumption), give each lane its own diagram rather than merging
-  them — unless the comparison between lanes is itself the point of that slide.
+- Compile `.d2` to `.svg` with `d2`.
+- Rasterize `.svg` to `.png` with `rsvg-convert` from librsvg. Prefer this to
+  D2's direct PNG export, which requires a headless browser; SVG rasterization is
+  smaller and reliably handles D2's embedded fonts.
+- Use the repository's shared build script for the actual rendering logic. Each
+  companion folder's `build.sh` should only resolve its location and delegate to
+  that script.
+- Provide and document a Docker fallback using `terrastruct/d2:latest` for
+  environments without a local D2 installation.
+- Regenerate both formats whenever a `.d2` source changes.
 
-## Regeneration workflow
+## Final review
 
-- `d2` compiles `.d2` → `.svg`. `rsvg-convert` (librsvg) rasterizes `.svg` →
-  `.png` — preferred over D2's own PNG export, because that requires a headless
-  browser dependency, while rasterizing the SVG only needs a small, reliable
-  library that can also decode D2's embedded fonts.
-- Provide a Docker fallback (`terrastruct/d2:latest`) for environments without
-  local tooling, and document the fallback command explicitly, since this is
-  often the first thing to break in a new environment.
-- Rule of thumb to enforce in review: a `.d2` change without its regenerated
-  `.svg`/`.png` twin in the same change is incomplete.
+Before finishing, verify that:
+
+- the sequence tells a comprehensible story without requiring the reader to open
+  every source section;
+- each diagram communicates one clear idea and has no unexplained visual
+  conventions;
+- terminology, direction of effects, and current/future status match the source;
+- the set uses domain-appropriate visuals rather than assuming relational
+  tables, roles, grants, or schemas;
+- README links and image paths resolve from the companion folder;
+- every `.d2` file has current `.svg` and `.png` outputs;
+- the shared build path and documented fallback are accurate for this
+  repository.

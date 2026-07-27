@@ -8,17 +8,20 @@
 # Convention: doc/wiki/kanban.hmd
 
 board:
-  title: "doc/issues/ Kanban board",
-  description: "The index of doc/issues/.",
+  title: "doc/issues/ Kanban board"
+  description: "The index of current work items as tracked in doc/issues/."
   columns: [
     { name: "backlog", description: "Issues that are not yet prioritized." },
     { name: "todo", description: "Issues that are prioritized and ready to work on." },
     { name: "doing", description: "Issues that are currently being worked on." },
     { name: "done", description: "Issues that have been completed." }
   ]
-  last_id: 1 # to be incremented when adding a new issue card
+  last_id: 2 # to be incremented when adding a new issue card
   items:
-    backlog: []
+    backlog:
+      - id: "0002"
+        title: Align harness prompts with CLI commands
+        file: 0002-align-harness-prompts-with-cli-commands.md
 
     todo: []
 
