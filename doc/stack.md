@@ -62,6 +62,16 @@ the same paths and the same bytes. No timestamps, no machine-specific values, no
 network, canonical output ordering, and template declaration method bodies are
 never executed.
 
+## Releases
+
+Publishing runs from GitHub, never from a laptop. Bump `version` in
+`pyproject.toml`, run `uv sync` so `uv.lock` follows, commit, then tag
+`vX.Y.Z` and publish a GitHub release for that tag. The `Release` workflow
+(`.github/workflows/release.yml`) checks the tag against the packaged version,
+runs the tests, builds with `uv build`, uploads to PyPI through trusted
+publishing (OIDC — no stored token), and attaches the distributions to the
+release. Retry a failed publish with the workflow's manual trigger.
+
 ## Diagrams
 
 Slide decks under `doc/models/**/` are D2 sources rendered by

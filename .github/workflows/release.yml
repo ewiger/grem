@@ -1,0 +1,64 @@
+name: Release
+
+# Publishing runs from GitHub, not a laptop: publishing a GitHub release for a
+# `vX.Y.Z` tag builds the distributions and uploads them to PyPI through
+# trusted publishing (OIDC), so no API token is stored in this repository.
+# Use the manual trigger to retry a tag whose publish job failed.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build and publish, for example v0.2.0"
+        required: true
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/grem-ai
+    permissions:
+      id-token: write # trusted publishing to PyPI
+      contents: write # attach the built distributions to the release
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Check the tag matches the packaged version
+        env:
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          version="$(python3 -c 'import tomllib, pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
+          if [ "v$version" != "$TAG" ]; then
+            echo "tag $TAG does not match pyproject version $version" >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Attach distributions to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" dist/* --clobber
