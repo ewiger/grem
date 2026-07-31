@@ -1,7 +1,7 @@
 kind: layout
 schema: 1
 template: python
-template_version: 0.14.0
+template_version: 0.15.0
 generated:
   directories:
     - .claude
@@ -49,6 +49,7 @@ generated:
     - doc/issues/kanban.yaml
     - doc/proposals/README.md
     - doc/proposals/TEMPLATE.md
+    - doc/stack.md
     - doc/wiki/README.md
     - doc/wiki/hyper-markdown.hmd
     - doc/wiki/kanban.hmd

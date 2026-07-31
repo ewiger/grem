@@ -86,6 +86,7 @@ EXPECTED_PATHS = (
     Path("doc/proposals"),
     Path("doc/proposals/README.md"),
     Path("doc/proposals/TEMPLATE.md"),
+    Path("doc/stack.md"),
     Path("doc/wiki"),
     Path("doc/wiki/README.md"),
     Path("doc/wiki/hyper-markdown.hmd"),
@@ -132,7 +133,8 @@ def test_python_template_has_exact_tree_and_rendered_content(tmp_path: Path) -> 
             relative = source.relative_to(bundled_content())
             expected = render(source.read_text(), VARIABLES)
             assert (target / relative).read_text() == expected
-    assert (target / "README.md").read_text() == "# myproject\n"
+    assert (target / "README.md").read_text().startswith("# myproject\n")
+    assert "doc/stack.md" in (target / "README.md").read_text()
     assert 'name = "myproject"' in (target / "pyproject.toml").read_text()
     assert "MYPROJECT-0001" in (target / "doc" / "proposals" / "README.md").read_text()
 
@@ -149,14 +151,15 @@ def test_scaffold_substitutes_path_components(tmp_path: Path) -> None:
 
     assert (target / "src" / "widget_co").is_dir()
     assert not (target / "src" / "{{ package_name }}").exists()
-    assert (target / "README.md").read_text() == "# Widget Co\n"
+    assert (target / "README.md").read_text().startswith("# Widget Co\n")
+    assert "src/widget_co/" in (target / "doc" / "stack.md").read_text()
 
 
 def test_python_template_declares_semver_version() -> None:
     template = load_manifest(bundled_template())
 
     assert template.name == "python"
-    assert str(template.version) == "0.14.0"
+    assert str(template.version) == "0.15.0"
 
 
 def test_render_replaces_known_tokens_and_preserves_unknown() -> None:

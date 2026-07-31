@@ -100,7 +100,7 @@ def test_scaffold_command_uses_bundled_template(tmp_path: Path) -> None:
     result = runner.invoke(app, ["init", str(target)])
 
     assert result.exit_code == 0
-    assert "Scaffolded 48 entries" in result.stdout
+    assert "Scaffolded 49 entries" in result.stdout
     assert (target / "src" / "myproject").is_dir()
     assert (target / "doc" / "models" / "behavior").is_dir()
     assert (target / "doc" / "proposals" / "README.md").is_file()
@@ -122,7 +122,7 @@ def test_init_name_option_substitutes_variables(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "as 'Demo App'" in result.stdout
     assert (target / "src" / "demo_app").is_dir()
-    assert (target / "README.md").read_text() == "# Demo App\n"
+    assert (target / "README.md").read_text().startswith("# Demo App\n")
     assert 'name = "demo_app"' in (target / "pyproject.toml").read_text()
     assert "DEMOAPP-0001" in (target / "doc" / "proposals" / "README.md").read_text()
     config = (target / ".grem" / "config.yaml").read_text()
@@ -138,7 +138,7 @@ def test_init_defaults_name_to_target_folder(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert (target / "src" / "coolthing").is_dir()
-    assert (target / "README.md").read_text() == "# coolthing\n"
+    assert (target / "README.md").read_text().startswith("# coolthing\n")
 
 
 def test_sync_command_prints_project_prompt(tmp_path: Path) -> None:
@@ -453,7 +453,7 @@ def test_upgrade_overlays_template_and_prints_merge_prompt(tmp_path: Path) -> No
     assert "resulting unstaged Git diff" in result.stdout
     # Project-owned files are protected: README/pyproject keep their init values,
     # not the newer template's content.
-    assert project.joinpath("README.md").read_text() == "# myproject\n"
+    assert "Upgraded template." not in project.joinpath("README.md").read_text()
     assert 'name = "myproject"' in project.joinpath("pyproject.toml").read_text()
     # Template-owned files are refreshed.
     assert "UPGRADED-TEMPLATE-MARKER" in (

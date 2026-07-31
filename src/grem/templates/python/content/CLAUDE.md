@@ -2,6 +2,8 @@
 
 Treat `doc/` as a modular knowledge base:
 
+- `doc/stack.md` declares the language, tooling, and code conventions. Follow it
+  when writing code or adding a dependency.
 - `doc/models/` declares the system through requirements, data, domain, and
   behavior lenses.
 - `doc/wiki/` contains hyper-markdown (`.hmd`) cards.

@@ -20,6 +20,7 @@ Use:
 - `upgrade.md` to review and merge a newer template after grem overlays it in a
   clean Git worktree.
 
-System declarations belong under `doc/models/`. Active work belongs under
-`doc/issues/`. Numbered technical specifications and substantial decisions
-belong under `doc/proposals/`.
+The language, tooling, and code conventions are declared in `doc/stack.md`;
+follow it when writing code or adding a dependency. System declarations belong
+under `doc/models/`. Active work belongs under `doc/issues/`. Numbered technical
+specifications and substantial decisions belong under `doc/proposals/`.

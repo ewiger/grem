@@ -9,7 +9,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.14.0"
+VERSION = "0.15.0"
 
 
 class Empty(Moniker):
@@ -177,6 +177,10 @@ class Issues(Moniker):
 
 
 class Documentation(Moniker):
+    @file("stack.md")
+    def stack(self):
+        ...
+
     @folder
     def models(self) -> Models:
         ...

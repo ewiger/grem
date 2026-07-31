@@ -14,6 +14,9 @@ Keep two layers separate:
 Do not add linting, documentation publishing, git worktree management, or a
 spec-to-code loop to the CLI.
 
+`doc/stack.md` declares the language, tooling, and code conventions of this
+repository. Follow it when writing code or adding a dependency.
+
 The project knowledge base lives under `doc/`. Model lenses belong directly
 under `doc/models/`; hyper-markdown wiki cards belong under `doc/wiki/`;
 numbered ADR/RFC-style specifications belong under `doc/proposals/`.

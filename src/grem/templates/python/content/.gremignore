@@ -10,6 +10,7 @@
 
 pyproject.toml
 README.md
+doc/stack.md
 doc/proposals/README.md
 doc/issues/kanban.yaml
 src/**

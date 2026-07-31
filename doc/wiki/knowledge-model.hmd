@@ -7,6 +7,9 @@ card indexes those categories; the [[grem-cli]] stamps them and agents fill them
 
 ## The categories
 
+- `doc/stack.md` — the ground layer: the language, tooling, and code conventions
+  the project is built on, so contributors and agents pick the stack's defaults
+  instead of guessing. Project-owned: stamped once, then evolved in place.
 - `doc/models/` — the design layer: the [[models|lenses]] that declare *what* the
   system is and *how it must behave*, before and alongside the code in `src/`.
 - `doc/wiki/` — this graph itself: cross-linked [[hyper-markdown]] (`.hmd`) cards,

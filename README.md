@@ -97,6 +97,7 @@ myproject/
   src/myproject/
   tests/
   doc/
+    stack.md
     models/
       requirements/
       data/
@@ -243,6 +244,10 @@ doc](doc/models/behavior/grem-lifecycle.md).
 
 `doc/` contains categories of truth with different lifetimes:
 
+- [`doc/stack.md`](doc/stack.md) declares the language, tooling, and code
+  conventions the project is built on, so agents pick the stack's defaults
+  instead of guessing. It is project-owned: the template seeds it, the project
+  evolves it.
 - `doc/models/` declares the system through requirements, data, domain, and
   behavior lenses. [len](https://github.com/ewiger/len) files such as L0, L1, and
   L2 live directly here.
@@ -329,7 +334,7 @@ from grem.scaffold import Moniker, file, folder
 
 
 NAME = "python"
-VERSION = "0.14.0"
+VERSION = "0.15.0"
 
 
 class Empty(Moniker):
