@@ -1,0 +1,55 @@
+# Gremlin manifesto
+
+The **gremlin manifesto** is the short list of rules **grem** projects (derived from grem framework) work by. A **gremlin** is an agent that develops a feature end to end, and the manifesto says what that agent may do, what it may touch, and how its output is kept apart from human work. The rules are punchy on purpose: each one is meant to be recalled without opening the file.
+
+## Rule one — agents commit under their own identity
+
+Features are developed by agents, and an agent has an identity all the way down
+to the Git commit. When a gremlin opens a pull request from a feature branch, it
+commits as itself, not as the human running it. Development is the work of many
+identities, and the log says which.
+
+Hand-written code stays unmixed with generated code. Code the repository owner
+or a mentor wrote by hand — and the comments on it — is never blended into what
+an agent produced, in the same commit or the same block. The separation is not
+bookkeeping: mixing the two is what creates circular logic and self-referencing
+dead ends, where an agent reads its own earlier output as if it were human
+intent and reinforces it. Keeping the authorship boundary visible in the history
+keeps that loop from closing.
+
+## Rule two — no archaeology
+
+A proposal is a complete text, not a web of references. Write the record so it
+can be read start to finish, once, by someone who has opened no other file.
+State plainly what the thing is and what its features are.
+
+Do **not** thread the prose with identifiers standing in for the claim itself:
+feature IDs (`F21`), question IDs (`Q7`), section refs (`§5.3`), sketch
+requirement numbers ("requirement 35"), or links to sibling proposals. Restate
+the constraint instead of citing where it lives. An identifier may follow a
+claim so a reader can locate the row; it may never *be* the claim. Every
+surviving pointer goes in one **See also** section at the end, plus footnotes if
+genuinely needed.
+
+The failure this prevents: a sentence like "This is P1 applied to queries, and
+it is why §1 and §4 are stated before F21 lands" is four lookups in three files
+and communicates nothing on its own. A page of that is a page of pointers.
+Requiring archaeology to parse a sentence is the defect, regardless of whether
+each individual link is correct.
+
+Subsections are titled by **what they cover, not by number**. Numbered headings
+are what make `§5.3` citable, and a named heading survives an edit. Numbering
+was removed from `TEMPLATE.md` on 2026-08-07 for this reason; `HMD-0003` was
+rewritten the same day as the worked example.
+
+Trackers are exempt. A `STATUS.md` is a table of IDs by nature — that is its
+job, and its rows are read one at a time rather than as prose. The rule binds
+`README.md` records, and applies to `doc/wiki/` cards for the same reason.
+
+See [[hyper-markdown]] and [[knowledge-model]].
+
+See the [disentangle skill](../../.claude/skills/disentangle/) for a worked example of how to not overload with too many references, and how to write a proposal that is readable without having to open other files. The skill is a reminder that the goal is to communicate clearly to humans, not just to machines.
+
+## Rule three —  LLM english != Human english
+
+See the [decladify skill](../../.claude/skills/declaudify/) for a worked example of how to write in a way that is readable by humans and not just LLMs. The skill is a reminder that the two are not the same, and that the goal is to communicate clearly to humans, not just to machines.
