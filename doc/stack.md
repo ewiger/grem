@@ -33,7 +33,9 @@ changes.
 - setuptools build backend, `src/` layout. The distribution is published as
   `grem-ai`; the import package and console script are both `grem`.
 - Template content ships as package data — new template files must be reachable
-  by the `[tool.setuptools.package-data]` globs.
+  by the `[tool.setuptools.package-data]` globs. Dotfiles at a template's
+  `content/` root need their own glob line; the recursive globs do not match
+  them.
 
 ## Dependencies
 
@@ -51,9 +53,11 @@ changes.
   source module they cover: `tests/test_scaffold.py` for `src/grem/scaffold.py`.
 - Tests are deterministic and offline, and use `tmp_path` for anything touching
   the filesystem.
-- The bundled template has an exact expected tree in `tests/test_scaffold.py`.
+- Each bundled template has an exact expected tree in `tests/test_scaffold.py`.
   Adding or removing a template file means updating that tree, the `generated:`
-  list in `content/.grem/config.yaml`, and the template `VERSION`.
+  list in `content/.grem/config.yaml`, and the template `VERSION`. A
+  parametrized test scaffolds every bundled template and checks its tree
+  against its own `generated:` list, so a forgotten entry fails there.
 
 ## Determinism
 

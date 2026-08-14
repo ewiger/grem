@@ -141,6 +141,18 @@ def test_init_defaults_name_to_target_folder(tmp_path: Path) -> None:
     assert (target / "README.md").read_text().startswith("# coolthing\n")
 
 
+def test_init_selects_a_bundled_template_by_name(tmp_path: Path) -> None:
+    target = tmp_path / "mytool"
+
+    result = runner.invoke(app, ["init", str(target), "--template", "rust"])
+
+    assert result.exit_code == 0
+    assert 'name = "mytool"' in (target / "Cargo.toml").read_text()
+    assert "use mytool::greeting;" in (target / "src" / "main.rs").read_text()
+    assert not (target / "pyproject.toml").exists()
+    assert "template: rust" in (target / ".grem" / "config.yaml").read_text()
+
+
 def test_sync_command_prints_project_prompt(tmp_path: Path) -> None:
     target = tmp_path / "myproject"
     scaffold_result = runner.invoke(app, ["init", str(target)])

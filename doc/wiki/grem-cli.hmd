@@ -7,7 +7,8 @@ prompts. It does not run an LLM or perform prompted lifecycle changes itself.
 
 - `grem init [TARGET]` scaffolds the declared folders and renders the declared
   template files into the target. Like `git init` it defaults to the bundled
-  `python` template (override with `--template`/`-t`) and to the current
+  `python` template (`--template`/`-t` selects another, such as `rust`, by
+  directory name under `src/grem/templates/`) and to the current
   directory, and names the project after the target folder — prompting when
   interactive, or take `--name`/`-n`. The name drives the template
   [[grem-config|variables]] (package name, proposal prefix) that are substituted

@@ -16,7 +16,7 @@ board:
     { name: "doing", description: "Issues that are currently being worked on." },
     { name: "done", description: "Issues that have been completed." }
   ]
-  last_id: 2 # to be incremented when adding a new issue card
+  last_id: 3 # to be incremented when adding a new issue card
   items:
     backlog:
       - id: "0002"
@@ -28,6 +28,10 @@ board:
     doing: []
 
     done:
+      - id: "0003"
+        title: Bundled Rust template
+        file: 0003-rust-template.md
+
       - id: "0001"
         title: Incomplete init and upgrade
         file: 0001-incomplete-init-and-upgrade.md

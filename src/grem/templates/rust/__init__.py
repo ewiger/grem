@@ -1,0 +1,1 @@
+"""Default Rust project template."""

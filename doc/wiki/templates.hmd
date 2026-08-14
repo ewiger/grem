@@ -3,8 +3,19 @@
 A **template** is what `grem init` and `grem upgrade` stamp from: a directory
 holding a `bootstrap.py` manifest and a `content/` tree. `bootstrap.py` is a
 trusted Python module grem evaluates to discover the project structure; the files
-are copied from `content/`, with template variables substituted (see below). The
-bundled `python` template lives at `src/grem/templates/python/`.
+are copied from `content/`, with template variables substituted (see below).
+
+Bundled templates live at `src/grem/templates/<name>/` and `--template` selects
+one by directory name — there is no registry to update. Two ship today:
+`python` (the default) and `rust`. They stamp the same control layer and differ
+only where the language does: `pyproject.toml` and `src/{{ package_name }}/`
+against `Cargo.toml`, `rust-toolchain.toml`, `.gitignore`, and compiling
+`src/lib.rs` + `src/main.rs` stubs. Each seeds its own `doc/stack.md`.
+
+A declared file's bytes must come from its own template's `content/` — the
+planner rejects any source that escapes it — so the shared harness prompts,
+doc styles, wiki cards, and agent instruction files are **duplicated per
+template**. Editing one of those files means editing both copies.
 
 ## The manifest
 
@@ -49,8 +60,10 @@ A template ships a root **`.gremignore`** listing the paths that are *project-ow
 every path matched by `.gremignore` (gitignore-style globs, `**`, trailing `/`).
 `.gremignore` is always protected implicitly, so user edits to it survive. In the
 `python` template the source tree, `README.md`, `pyproject.toml`, the proposals
-index, the Kanban board, and `doc/memory/` are project-owned; `CLAUDE.md` and
-`AGENTS.md` are template-owned and refreshed (put custom rules under `doc/memory/`).
+index, the Kanban board, and `doc/memory/` are project-owned; the `rust` template
+adds `tests/**`, `Cargo.toml`, `rust-toolchain.toml`, and `.gitignore` in place of
+`pyproject.toml`. `CLAUDE.md` and `AGENTS.md` are template-owned and refreshed in
+both (put custom rules under `doc/memory/`).
 
 ## Deterministic materialization
 

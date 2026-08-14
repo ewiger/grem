@@ -66,7 +66,7 @@ uv run grem init ./myproject
 Like `git init`, `grem init` defaults to the bundled `python` template and, with
 no argument, initializes the current directory. It refuses to run when the
 target already holds a `.grem` folder. Pass `--template/-t` to pick another
-template.
+bundled template — see [Bundled templates](#bundled-templates).
 
 The bundled Python template produces:
 
@@ -119,6 +119,82 @@ grem writes into the target even when it already holds unrelated files, but it
 refuses to overwrite existing files and refuses to re-initialize a directory
 that already holds a `.grem` folder. It also rejects unsafe paths, duplicate
 output paths, and missing template sources.
+
+## Bundled templates
+
+| Template | Stamps | Stack contract |
+| --- | --- | --- |
+| `python` (default) | `pyproject.toml`, `src/<package>/`, `tests/` | uv, setuptools, pytest, Typer |
+| `rust` | `Cargo.toml`, `rust-toolchain.toml`, `src/lib.rs` + `src/main.rs`, `tests/` | cargo, edition 2024, `cargo test`, clap (`derive`) |
+
+Both stamp the same control layer — `.grem/`, `doc/`, `CLAUDE.md`, `AGENTS.md`,
+and the Claude Code skill. They differ only where the language does, and each
+seeds its own `doc/stack.md` declaring the language, tooling, and conventions
+that project follows. The choices mirror one another: where Python declares
+Typer, deriving a CLI from typed function signatures, Rust declares clap's
+`derive` API, deriving one from a typed struct.
+
+```console
+grem init ./mytool -t rust
+```
+
+The Rust template produces:
+
+```text
+mytool/
+  .claude/
+    skills/
+      grem/
+        SKILL.md
+  .grem/
+    config.yaml
+    harness/
+      README.md
+      diff.md
+      instructions.md
+      sync.md
+      upgrade.md
+    styles/
+      doc/
+        adr/
+          prompt.md
+        hmd/
+          prompt.md
+        lenses/
+          prompt.md
+        slides/
+          prompt.md
+  src/
+    lib.rs
+    main.rs
+  tests/
+    cli.rs
+  doc/
+    stack.md
+    models/
+      requirements/
+      data/
+      domain/
+      behavior/
+    wiki/
+    issues/
+    memory/
+    proposals/
+      README.md
+      TEMPLATE.md
+  .gitignore
+  AGENTS.md
+  CLAUDE.md
+  Cargo.toml
+  README.md
+  rust-toolchain.toml
+```
+
+Unlike the Python template's empty package folder, the Rust stubs compile:
+`cargo build`, `cargo test`, and `cargo clippy` all work on a fresh init. The
+`.gitignore` is load-bearing rather than cosmetic — `grem upgrade` requires a
+fully clean Git worktree including untracked files, so an unignored `target/`
+would block every upgrade.
 
 ## Command model
 
@@ -282,8 +358,8 @@ agent_instructions:
     - CLAUDE.md
 ```
 
-The Python template's `AGENTS.md` tells Codex to read `CLAUDE.md`. Both files
-also preserve the two context rules:
+Each template's `AGENTS.md` tells Codex to read `CLAUDE.md`. Both files also
+preserve the two context rules:
 
 - always load `doc/memory/**`;
 - ignore `.grem/**` unless the user explicitly activates a grem workflow.
@@ -361,6 +437,11 @@ nested `Moniker` trees; file declarations copy bytes from matching paths under
 The version in `bootstrap.py` must match `content/.grem/config.yaml`. Output
 ordering is canonical, and scaffolding generates no timestamps or
 machine-specific values.
+
+Bundled templates live in `src/grem/templates/<name>/`, and `--template` selects
+one by directory name. A file's bytes must come from its own template's
+`content/`, so the two bundled templates carry their own copies of the shared
+harness and documentation files rather than sharing them.
 
 Use a local template directory while developing one:
 

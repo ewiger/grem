@@ -18,7 +18,7 @@ into the work.
 ## How to run a workflow
 
 1. Run the requested grem subcommand and capture its stdout. If `grem` is not on
-   `PATH`, use `uv run grem ...` from the repo root.
+   `PATH`, install it with `uv tool install grem-ai` or `pipx install grem-ai`.
 2. Treat the printed Markdown as your instructions: the header lines name the
    scopes / files involved, and the body is the task. Do exactly what it says,
    scoped to this repository.
@@ -34,8 +34,7 @@ into the work.
   reconciling two scopes.
 - `grem new PATH --type TYPE --style STYLE` — prompt to apply a stored
   documentation style to a source file.
-- `grem init [TARGET] [-t TEMPLATE]` — scaffold a new project tree from a
-  bundled template, `python` or `rust` (defaults to the `python`
+- `grem init [TARGET]` — scaffold a new project tree (defaults to the `python`
   template in the current directory). Refuses if a `.grem/` folder exists.
 - `grem upgrade [PROJECT]` — overlay a newer template in a clean Git worktree,
   then review and merge the resulting diff per the printed prompt.

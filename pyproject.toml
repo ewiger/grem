@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "grem-ai"
-version = "0.2.0"
+version = "0.3.0"
 description = "Deterministic project bootstrap and control CLI for AI-assisted development: grem stamps structure, agents do the work."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -47,6 +47,7 @@ where = ["src"]
 grem = [
     "templates/*/content/*",
     "templates/*/content/**/*",
+    "templates/*/content/.gitignore",
     "templates/*/content/.gremignore",
     "templates/*/content/.grem/*",
     "templates/*/content/.grem/**/*",

@@ -1,0 +1,16 @@
+[package]
+name = "{{ package_name }}"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+
+[lib]
+name = "{{ package_name }}"
+path = "src/lib.rs"
+
+[[bin]]
+name = "{{ package_name }}"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
