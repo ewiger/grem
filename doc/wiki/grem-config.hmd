@@ -14,7 +14,7 @@ kind: layout
 schema: 1
 template: python
 template_version: 0.15.0
-grem_version: 0.2.0
+grem_version: 0.3.0
 variables:
   project_name: myproject
   package_name: myproject
